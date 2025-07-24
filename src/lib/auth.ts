@@ -28,34 +28,25 @@ const authConfig: NextAuthConfig = {
       },
       async authorize(credentials) {
         try {
-          console.log('Authorization attempt with credentials:', { email: credentials?.email });
-          
           // バリデーション
           const { email, password } = signInSchema.parse(credentials);
-          console.log('Validation passed for email:', email);
 
           // ユーザーをデータベースから検索
           const user = await prisma.user.findUnique({
             where: { email },
           });
 
-          console.log('User found:', user ? { id: user.id, email: user.email, name: user.name } : 'No user found');
-
           if (!user || !user.password) {
-            console.log('User not found or no password');
             return null;
           }
 
           // パスワードの検証
           const isValidPassword = await bcrypt.compare(password, user.password);
-          console.log('Password validation result:', isValidPassword);
 
           if (!isValidPassword) {
-            console.log('Invalid password');
             return null;
           }
 
-          console.log('Authentication successful, returning user data');
           // 認証成功時にユーザー情報を返す
           return {
             id: user.id,
@@ -63,7 +54,6 @@ const authConfig: NextAuthConfig = {
             name: user.name,
           };
         } catch (error) {
-          console.error('Auth error:', error);
           return null;
         }
       },
@@ -87,7 +77,6 @@ const authConfig: NextAuthConfig = {
     },
     async redirect({ url, baseUrl }) {
       // ログイン成功後のリダイレクト処理
-      console.log('Redirect callback called with:', { url, baseUrl });
       
       // 相対パスの場合は baseUrl を追加
       if (url.startsWith('/')) {

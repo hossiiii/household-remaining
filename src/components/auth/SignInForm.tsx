@@ -35,10 +35,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({ callbackUrl }) => {
 
       // redirect: true means NextAuth handles the redirect automatically
       // If we reach here, it means authentication failed
-      console.log('SignIn result (should only happen on error):', result);
-      
       if (result?.error || result === null) {
-        console.error('Login error:', result?.error);
         setError('メールアドレスまたはパスワードが正しくありません');
       } else {
         // This shouldn't happen with redirect: true, but just in case
