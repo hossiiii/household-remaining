@@ -12,7 +12,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Payment methods fetch error:', error);
       return { success: false, error: '支払い方法の取得に失敗しました' };
     }
   }
@@ -37,7 +36,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Payment method creation error:', error);
       return { success: false, error: '支払い方法の作成に失敗しました' };
     }
   }
@@ -63,7 +61,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Payment method update error:', error);
       return { success: false, error: '支払い方法の更新に失敗しました' };
     }
   }
@@ -79,7 +76,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Cards fetch error:', error);
       return { success: false, error: 'カード情報の取得に失敗しました' };
     }
   }
@@ -104,7 +100,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Card creation error:', error);
       return { success: false, error: 'カード情報の作成に失敗しました' };
     }
   }
@@ -130,7 +125,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Card update error:', error);
       return { success: false, error: 'カード情報の更新に失敗しました' };
     }
   }
@@ -146,7 +140,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Banks fetch error:', error);
       return { success: false, error: '銀行情報の取得に失敗しました' };
     }
   }
@@ -171,7 +164,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Bank creation error:', error);
       return { success: false, error: '銀行情報の作成に失敗しました' };
     }
   }
@@ -197,7 +189,6 @@ export class MasterService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Bank update error:', error);
       return { success: false, error: '銀行情報の更新に失敗しました' };
     }
   }

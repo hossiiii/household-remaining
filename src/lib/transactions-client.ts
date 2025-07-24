@@ -26,7 +26,6 @@ export class TransactionService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Transaction creation error:', error);
       return { success: false, error: '取引の作成に失敗しました' };
     }
   }
@@ -57,7 +56,6 @@ export class TransactionService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Transaction fetch error:', error);
       return { success: false, error: '取引の取得に失敗しました' };
     }
   }
@@ -83,7 +81,6 @@ export class TransactionService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Transaction update error:', error);
       return { success: false, error: '取引の更新に失敗しました' };
     }
   }
@@ -102,7 +99,6 @@ export class TransactionService {
 
       return { success: true };
     } catch (error) {
-      console.error('Transaction deletion error:', error);
       return { success: false, error: '取引の削除に失敗しました' };
     }
   }
@@ -118,7 +114,6 @@ export class TransactionService {
 
       return { success: true, data: result };
     } catch (error) {
-      console.error('Transaction fetch error:', error);
       return { success: false, error: '取引の取得に失敗しました' };
     }
   }

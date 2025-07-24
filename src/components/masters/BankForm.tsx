@@ -50,7 +50,7 @@ export const BankForm: React.FC<BankFormProps> = ({
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      // Error handling is done by the parent component
     }
   };
 
