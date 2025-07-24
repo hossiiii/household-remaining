@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Auth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?   // For credentials auth
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  accounts      Account[]
+  sessions      Session[]
+  
+  // 家計管理関連のリレーション
+  transactions  Transaction[]
+  paymentMethods PaymentMethod[]
+  cards         Card[]
+  banks         Bank[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// 家計管理システム専用のモデル
+
+model Transaction {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  date            DateTime
+  dayOfWeek       String   @map("day_of_week")
+  paymentMethodId String   @map("payment_method_id")
+  store           String?
+  purpose         String?
+  type            TransactionType
+  amount          Decimal  @db.Decimal(10, 2)
+  
+  // 現金関連
+  cashIncome      Decimal? @map("cash_income") @db.Decimal(10, 2)
+  cashExpense     Decimal? @map("cash_expense") @db.Decimal(10, 2)
+  cashBalance     Decimal? @map("cash_balance") @db.Decimal(10, 2)
+  
+  // カード関連
+  cardAmount         Decimal?  @map("card_amount") @db.Decimal(10, 2)
+  cardWithdrawalDate DateTime? @map("card_withdrawal_date")
+  
+  // 銀行関連
+  bankIncome  Decimal? @map("bank_income") @db.Decimal(10, 2)
+  bankExpense Decimal? @map("bank_expense") @db.Decimal(10, 2)
+  bankBalance Decimal? @map("bank_balance") @db.Decimal(10, 2)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  @@map("transactions")
+}
+
+model PaymentMethod {
+  id        String            @id @default(cuid())
+  userId    String            @map("user_id")
+  name      String
+  type      PaymentMethodType
+  isActive  Boolean           @default(true) @map("is_active")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("payment_methods")
+}
+
+model Card {
+  id                 String   @id @default(cuid())
+  userId             String   @map("user_id")
+  name               String
+  type               CardType
+  withdrawalDay      Int      @map("withdrawal_day") // 1-31
+  withdrawalBankId   String   @map("withdrawal_bank_id")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  withdrawalBank Bank @relation(fields: [withdrawalBankId], references: [id])
+
+  @@map("cards")
+}
+
+model Bank {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  name          String
+  accountNumber String?  @map("account_number")
+  branchName    String?  @map("branch_name")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@map("banks")
+}
+
+// Enums
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethodType {
+  CASH
+  CREDIT_CARD
+  PREPAID_CARD
+  MEAL_TICKET
+  BANK
+}
+
+enum CardType {
+  CREDIT_CARD
+  PREPAID_CARD
+}
