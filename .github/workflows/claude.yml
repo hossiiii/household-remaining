@@ -36,3 +36,59 @@ jobs:
           # Or use OAuth token instead:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           timeout_minutes: "60"
+
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            if [ "${{ github.event.issue.pull_request }}" != "" ]; then
+              URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.issue.number }}"
+              MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL"
+            else
+              URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+              MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $URL"
+            fi
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL"
+          else
+            MESSAGE="Claude PR Assistant処理が完了しました！"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"$MESSAGE\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $URL"
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            if [ "${{ github.event.issue.pull_request }}" != "" ]; then
+              URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.issue.number }}"
+              MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL"
+            else
+              URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+              MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $URL"
+            fi
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL"
+          else
+            MESSAGE="Claude PR Assistant処理が失敗しました。"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"$MESSAGE\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
