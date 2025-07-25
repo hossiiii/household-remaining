@@ -23,7 +23,6 @@ jobs:
       pull-requests: read
       issues: read
       id-token: write
-      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,25 +43,25 @@ jobs:
           if [ "${{ github.event_name }}" = "issues" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
             TITLE="${{ github.event.issue.title }}"
-            MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $TITLE\n$URL"
           elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
             TITLE="${{ github.event.pull_request.title }}"
-            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $TITLE\n$URL"
           elif [ "${{ github.event_name }}" = "issue_comment" ]; then
             if [ "${{ github.event.issue.pull_request }}" != "" ]; then
               URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.issue.number }}"
               TITLE="${{ github.event.issue.title }}"
-              MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL\nタイトル: $TITLE"
+              MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $TITLE\n$URL"
             else
               URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
               TITLE="${{ github.event.issue.title }}"
-              MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $URL\nタイトル: $TITLE"
+              MESSAGE="Claude PR Assistant処理が完了しました！\nIssue: $TITLE\n$URL"
             fi
           elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
             TITLE="${{ github.event.pull_request.title }}"
-            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が完了しました！\nPR: $TITLE\n$URL"
           else
             MESSAGE="Claude PR Assistant処理が完了しました！"
           fi
@@ -77,85 +76,28 @@ jobs:
           if [ "${{ github.event_name }}" = "issues" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
             TITLE="${{ github.event.issue.title }}"
-            MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $TITLE\n$URL"
           elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
             TITLE="${{ github.event.pull_request.title }}"
-            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $TITLE\n$URL"
           elif [ "${{ github.event_name }}" = "issue_comment" ]; then
             if [ "${{ github.event.issue.pull_request }}" != "" ]; then
               URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.issue.number }}"
               TITLE="${{ github.event.issue.title }}"
-              MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL\nタイトル: $TITLE"
+              MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $TITLE\n$URL"
             else
               URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
               TITLE="${{ github.event.issue.title }}"
-              MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $URL\nタイトル: $TITLE"
+              MESSAGE="Claude PR Assistant処理が失敗しました。\nIssue: $TITLE\n$URL"
             fi
           elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
             URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
             TITLE="${{ github.event.pull_request.title }}"
-            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $URL\nタイトル: $TITLE"
+            MESSAGE="Claude PR Assistant処理が失敗しました。\nPR: $TITLE\n$URL"
           else
             MESSAGE="Claude PR Assistant処理が失敗しました。"
           fi
-          
-          curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\"$MESSAGE\"}" \
-          ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: Get Claude Summary
-        if: success()
-        run: |
-          # イベントタイプに基づいてURLとタイトルを設定
-          if [ "${{ github.event_name }}" = "issues" ]; then
-            URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
-            TITLE="${{ github.event.issue.title }}"
-            EVENT_TYPE="Issue"
-          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
-            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
-            TITLE="${{ github.event.pull_request.title }}"
-            EVENT_TYPE="Pull Request"
-          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            if [ "${{ github.event.issue.pull_request }}" != "" ]; then
-              URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.issue.number }}"
-              TITLE="${{ github.event.issue.title }}"
-              EVENT_TYPE="Pull Request"
-            else
-              URL="${{ github.server_url }}/${{ github.repository }}/issues/${{ github.event.issue.number }}"
-              TITLE="${{ github.event.issue.title }}"
-              EVENT_TYPE="Issue"
-            fi
-          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
-            URL="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
-            TITLE="${{ github.event.pull_request.title }}"
-            EVENT_TYPE="Pull Request"
-          fi
-          
-          # 処理内容をイベントタイプに基づいて動的に生成
-          case "${{ github.event_name }}" in
-            "issues")
-              SUMMARY="Claudeは以下の処理を実行しました：\n- Issueの内容を分析\n- 提案や改善点を提供\n- コードレビューを実施"
-              ;;
-            "pull_request_review")
-              SUMMARY="Claudeは以下の処理を実行しました：\n- PRのコードレビューを実施\n- 改善提案を提供\n- セキュリティチェックを実行"
-              ;;
-            "issue_comment")
-              if [ "${{ github.event.issue.pull_request }}" != "" ]; then
-                SUMMARY="Claudeは以下の処理を実行しました：\n- PRコメントへの回答を提供\n- コードレビューを実施\n- 改善提案を提示"
-              else
-                SUMMARY="Claudeは以下の処理を実行しました：\n- Issueコメントへの回答を提供\n- 問題解決の提案を提示\n- 追加情報を提供"
-              fi
-              ;;
-            "pull_request_review_comment")
-              SUMMARY="Claudeは以下の処理を実行しました：\n- レビューコメントへの回答を提供\n- コードレビューを実施\n- 改善提案を提示"
-              ;;
-            *)
-              SUMMARY="Claudeは以下の処理を実行しました：\n- コードレビューの実施\n- 提案の提供\n- 改善点の指摘"
-              ;;
-          esac
-          
-          MESSAGE="📋 Claude処理サマリー\n$EVENT_TYPE: $URL\nタイトル: $TITLE\n\n$SUMMARY"
           
           curl -X POST -H 'Content-type: application/json' \
           --data "{\"text\":\"$MESSAGE\"}" \
