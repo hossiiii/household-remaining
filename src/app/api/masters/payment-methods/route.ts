@@ -10,7 +10,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await MasterService.getPaymentMethods(session.user.id);
+    const { searchParams } = new URL(request.url);
+    const initialize = searchParams.get('initialize') === 'true';
+
+    const result = initialize 
+      ? await MasterService.getAvailablePaymentMethods(session.user.id)
+      : await MasterService.getPaymentMethods(session.user.id);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -37,6 +42,8 @@ export async function POST(request: NextRequest) {
     const data = {
       name: validatedData.name,
       type: validatedData.type,
+      cardId: validatedData.cardId || null,
+      bankId: validatedData.bankId || null,
       isActive: validatedData.isActive ?? true,
     };
 

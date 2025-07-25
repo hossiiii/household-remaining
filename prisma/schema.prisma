@@ -124,6 +124,9 @@ model PaymentMethod {
   bank         Bank?         @relation(fields: [bankId], references: [id])
   transactions Transaction[]
 
+  @@unique([userId, name])
+  @@unique([userId, cardId])
+  @@unique([userId, bankId])
   @@map("payment_methods")
 }
 

@@ -115,7 +115,9 @@ export interface PaginatedResponse<T> {
 // フォームデータ型定義
 export interface PaymentMethodFormData {
   name: string;
-  type: 'CASH' | 'CREDIT_CARD' | 'PREPAID_CARD' | 'MEAL_TICKET' | 'BANK';
+  type: 'CASH' | 'CARD' | 'BANK';
+  cardId?: string;
+  bankId?: string;
   isActive?: boolean;
 }
 
@@ -134,7 +136,12 @@ export interface BankFormData {
   isActive?: boolean;
 }
 
-// リレーション付きの取引型
+// リレーション付きの型定義
+export type PaymentMethodWithRelations = PaymentMethod & {
+  card?: Card;
+  bank?: Bank;
+};
+
 export type TransactionWithPaymentMethod = Transaction & {
-  paymentMethod: PaymentMethod;
+  paymentMethod: PaymentMethodWithRelations;
 };

@@ -27,15 +27,31 @@ export const transactionSchema = z.object({
 export const transactionUpdateSchema = transactionSchema.partial();
 
 // Payment Method validation schemas
-export const paymentMethodSchema = z.object({
+const paymentMethodBaseSchema = z.object({
   name: z.string().min(1, '支払い方法名を入力してください'),
-  type: z.enum(['CASH', 'CREDIT_CARD', 'PREPAID_CARD', 'MEAL_TICKET', 'BANK'], {
+  type: z.enum(['CASH', 'CARD', 'BANK'], {
     required_error: '種別を選択してください',
   }),
+  cardId: z.string().optional(),
+  bankId: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
-export const paymentMethodUpdateSchema = paymentMethodSchema.partial();
+export const paymentMethodSchema = paymentMethodBaseSchema.refine((data) => {
+  // カードタイプの場合はcardIdが必要
+  if (data.type === 'CARD' && !data.cardId) {
+    return false;
+  }
+  // 銀行タイプの場合はbankIdが必要
+  if (data.type === 'BANK' && !data.bankId) {
+    return false;
+  }
+  return true;
+}, {
+  message: '支払い方法の種別に応じて適切な関連情報を選択してください',
+});
+
+export const paymentMethodUpdateSchema = paymentMethodBaseSchema.partial();
 
 // Card validation schemas
 export const cardSchema = z.object({

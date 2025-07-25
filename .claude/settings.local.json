@@ -38,7 +38,10 @@
       "Bash(true)",
       "Bash(npx prisma:*)",
       "mcp__playwright__browser_tab_new",
-      "mcp__playwright__browser_tab_close"
+      "mcp__playwright__browser_tab_close",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_evaluate",
+      "Bash(npm run:*)"
     ],
     "deny": []
   },
