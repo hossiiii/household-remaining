@@ -2,6 +2,42 @@ import Papa from 'papaparse';
 import { csvRowSchema } from '@/lib/validations';
 import type { TransactionFormData, TransactionWithPaymentMethod, CSVImportData } from '@/types';
 
+// CSVフィールドマッピング: 日本語ヘッダー → 英語フィールド名
+const FIELD_MAPPING: Record<string, string> = {
+  '日付': 'date',
+  '支払い方法': 'paymentMethod',
+  '店舗': 'store',
+  '用途': 'purpose',
+  '種別': 'type',
+  '金額': 'amount',
+};
+
+// 種別の値マッピング: 日本語 → 英語
+const TYPE_MAPPING: Record<string, string> = {
+  '収入': 'income',
+  '支出': 'expense',
+};
+
+/**
+ * CSVの行データをフィールドマッピングして英語キーに変換
+ */
+function mapCSVRowFields(row: any): any {
+  const mappedRow: any = {};
+  
+  // フィールド名を日本語から英語に変換
+  for (const [key, value] of Object.entries(row)) {
+    const mappedKey = FIELD_MAPPING[key] || key;
+    mappedRow[mappedKey] = value;
+  }
+  
+  // 種別の値を日本語から英語に変換
+  if (mappedRow.type && TYPE_MAPPING[mappedRow.type]) {
+    mappedRow.type = TYPE_MAPPING[mappedRow.type];
+  }
+  
+  return mappedRow;
+}
+
 export interface ParsedTransactionData {
   date: Date;
   paymentMethodId: string;
@@ -32,8 +68,11 @@ export async function parseCSVToTransactions(
 
   for (const [index, row] of csvData.entries()) {
     try {
+      // フィールドマッピングを適用
+      const mappedRow = mapCSVRowFields(row);
+      
       // Zod でバリデーション
-      const validated = csvRowSchema.parse(row);
+      const validated = csvRowSchema.parse(mappedRow);
       
       // 支払い方法名をIDに解決
       const paymentMethodId = await paymentMethodResolver(validated.paymentMethod);
@@ -152,22 +191,51 @@ export function downloadCSVFile(content: string, filename: string): void {
  * CSVファイルを読み込んでパースする
  */
 export function parseCSVFile(file: File): Promise<any[]> {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      encoding: 'UTF-8',
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          reject(new Error(`CSV パース エラー: ${results.errors[0].message}`));
-        } else {
-          resolve(results.data);
-        }
-      },
-      error: (error) => {
-        reject(new Error(`CSV 読み込み エラー: ${error.message}`));
+  return new Promise(async (resolve, reject) => {
+    try {
+      // サーバー環境かクライアント環境かを判定
+      const isServerEnvironment = typeof window === 'undefined';
+      
+      if (isServerEnvironment) {
+        // サーバー環境: Fileをテキストに変換してからPapa.parseに渡す
+        const arrayBuffer = await file.arrayBuffer();
+        const text = new TextDecoder('utf-8').decode(arrayBuffer);
+        
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            if (results.errors.length > 0) {
+              reject(new Error(`CSV パース エラー: ${results.errors[0].message}`));
+            } else {
+              resolve(results.data);
+            }
+          },
+          error: (error) => {
+            reject(new Error(`CSV 読み込み エラー: ${error.message}`));
+          }
+        });
+      } else {
+        // クライアント環境: 従来通りFileオブジェクトを直接使用
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          encoding: 'UTF-8',
+          complete: (results) => {
+            if (results.errors.length > 0) {
+              reject(new Error(`CSV パース エラー: ${results.errors[0].message}`));
+            } else {
+              resolve(results.data);
+            }
+          },
+          error: (error) => {
+            reject(new Error(`CSV 読み込み エラー: ${error.message}`));
+          }
+        });
       }
-    });
+    } catch (error) {
+      reject(new Error(`ファイル変換エラー: ${error instanceof Error ? error.message : 'Unknown error'}`));
+    }
   });
 }
 
