@@ -39,40 +39,6 @@ async function main() {
 
   console.log('Created banks:', banks);
 
-  // 支払い方法マスタの作成
-  const paymentMethods = await Promise.all([
-    prisma.paymentMethod.create({
-      data: {
-        userId: user.id,
-        name: '現金',
-        type: 'CASH',
-      },
-    }),
-    prisma.paymentMethod.create({
-      data: {
-        userId: user.id,
-        name: 'メインクレジット',
-        type: 'CREDIT_CARD',
-      },
-    }),
-    prisma.paymentMethod.create({
-      data: {
-        userId: user.id,
-        name: 'プリペイドカード',
-        type: 'PREPAID_CARD',
-      },
-    }),
-    prisma.paymentMethod.create({
-      data: {
-        userId: user.id,
-        name: '銀行振込',
-        type: 'BANK',
-      },
-    }),
-  ]);
-
-  console.log('Created payment methods:', paymentMethods);
-
   // カード情報の作成
   const cards = await Promise.all([
     prisma.card.create({
@@ -97,6 +63,51 @@ async function main() {
 
   console.log('Created cards:', cards);
 
+  // 支払い方法マスタの作成
+  const paymentMethods = await Promise.all([
+    prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        name: '現金',
+        type: 'CASH',
+      },
+    }),
+    prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        name: 'メインクレジットカード',
+        type: 'CARD',
+        cardId: cards[0].id,
+      },
+    }),
+    prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        name: '楽天カード',
+        type: 'CARD',
+        cardId: cards[1].id,
+      },
+    }),
+    prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        name: 'みずほ銀行',
+        type: 'BANK',
+        bankId: banks[0].id,
+      },
+    }),
+    prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        name: '三菱UFJ銀行',
+        type: 'BANK',
+        bankId: banks[1].id,
+      },
+    }),
+  ]);
+
+  console.log('Created payment methods:', paymentMethods);
+
   // サンプル取引の作成
   const transactions = await Promise.all([
     prisma.transaction.create({
@@ -116,7 +127,7 @@ async function main() {
         userId: user.id,
         date: new Date('2024-01-16'),
         dayOfWeek: '火',
-        paymentMethodId: paymentMethods[1].id, // クレジットカード
+        paymentMethodId: paymentMethods[1].id, // メインクレジットカード
         store: 'ガソリンスタンド',
         purpose: '燃料費',
         type: 'EXPENSE',
@@ -126,12 +137,35 @@ async function main() {
     prisma.transaction.create({
       data: {
         userId: user.id,
+        date: new Date('2024-01-18'),
+        dayOfWeek: '木',
+        paymentMethodId: paymentMethods[2].id, // 楽天カード
+        store: 'オンラインショップ',
+        purpose: '日用品購入',
+        type: 'EXPENSE',
+        amount: 3200,
+      },
+    }),
+    prisma.transaction.create({
+      data: {
+        userId: user.id,
         date: new Date('2024-01-20'),
         dayOfWeek: '土',
-        paymentMethodId: paymentMethods[3].id, // 銀行振込
+        paymentMethodId: paymentMethods[3].id, // みずほ銀行
         purpose: '給与',
         type: 'INCOME',
         amount: 300000,
+      },
+    }),
+    prisma.transaction.create({
+      data: {
+        userId: user.id,
+        date: new Date('2024-01-25'),
+        dayOfWeek: '木',
+        paymentMethodId: paymentMethods[4].id, // 三菱UFJ銀行
+        purpose: '副業収入',
+        type: 'INCOME',
+        amount: 50000,
       },
     }),
   ]);
