@@ -30,13 +30,19 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Test database connection
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Testing connection with pooled URL..."
+          npx prisma db execute --stdin <<< "SELECT 1" || echo "Pooled connection failed"
+          
       - name: Run database migration
         env:
-          DATABASE_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Database URL format check:"
-          echo "$DATABASE_URL" | sed 's/:[^:@]*@/:***@/g'
-          echo "Testing database connection..."
+          echo "Running migrations..."
           npx prisma migrate deploy
 
       - name: Run database seed (if needed)
