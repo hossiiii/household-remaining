@@ -33,7 +33,11 @@ jobs:
       - name: Run database migration
         env:
           DATABASE_URL: ${{ secrets.DIRECT_URL }}
-        run: npx prisma migrate deploy
+        run: |
+          echo "Database URL format check:"
+          echo "$DATABASE_URL" | sed 's/:[^:@]*@/:***@/g'
+          echo "Testing database connection..."
+          npx prisma migrate deploy
 
       - name: Run database seed (if needed)
         env:
