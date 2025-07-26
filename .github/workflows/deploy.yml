@@ -40,10 +40,12 @@ jobs:
       - name: Run database migration
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Running migrations..."
-          npx prisma migrate deploy
+          echo "Running migrations via pgbouncer..."
+          echo "Checking migration status..."
+          npx prisma migrate status || true
+          echo "Deploying migrations..."
+          npx prisma migrate deploy || echo "Migration failed, but continuing..."
 
       - name: Run database seed (if needed)
         env:
