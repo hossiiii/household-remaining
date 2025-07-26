@@ -4,6 +4,8 @@ import { TransactionService } from '@/lib/transactions';
 import { generateTransactionCSV, generateCSVFilename } from '@/lib/csv-utils';
 import type { TransactionFilter } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
