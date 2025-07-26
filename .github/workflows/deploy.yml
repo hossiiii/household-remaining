@@ -38,6 +38,7 @@ jobs:
       - name: Run database seed (if needed)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
           # 初回デプロイ時のみシーダーを実行
           # ユーザーテーブルにデータがあるかチェック
