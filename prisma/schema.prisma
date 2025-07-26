@@ -59,6 +59,7 @@ model User {
   paymentMethods PaymentMethod[]
   cards         Card[]
   banks         Bank[]
+  balances      Balance[]
 
   @@map("users")
 }
@@ -161,8 +162,25 @@ model Bank {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards          Card[]          @relation("CardWithdrawalBank")
   paymentMethods PaymentMethod[]
+  balances       Balance[]
 
   @@map("banks")
+}
+
+model Balance {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  type      BalanceType
+  bankId    String?     @map("bank_id")
+  amount    Decimal     @db.Decimal(12, 2)
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bank Bank? @relation(fields: [bankId], references: [id])
+
+  @@unique([userId, type, bankId])
+  @@map("balances")
 }
 
 // Enums
@@ -180,4 +198,9 @@ enum PaymentMethodType {
 enum CardType {
   CREDIT_CARD
   PREPAID_CARD
+}
+
+enum BalanceType {
+  CASH
+  BANK
 }

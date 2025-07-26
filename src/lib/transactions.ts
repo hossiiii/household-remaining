@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { BalanceService } from './balance';
 import type {
   Transaction,
   TransactionFormData,
@@ -22,15 +23,42 @@ export class TransactionService {
         amount: data.amount,
       };
 
+      // 支払い方法を取得して残高更新の準備
+      const paymentMethod = await prisma.paymentMethod.findUnique({
+        where: { id: data.paymentMethodId },
+        include: { bank: true },
+      });
+
+      if (!paymentMethod) {
+        return { success: false, error: '指定された支払い方法が見つかりません' };
+      }
+
       const transaction = await prisma.transaction.create({
         data: transactionData,
         include: {
-          paymentMethod: true,
+          paymentMethod: {
+            include: {
+              bank: true,
+              card: true,
+            },
+          },
         },
       });
 
+      // 残高を更新（カード以外）
+      if (paymentMethod.type !== 'CARD') {
+        await BalanceService.processTransaction(
+          data.userId,
+          paymentMethod.type,
+          paymentMethod.bankId,
+          data.amount,
+          transactionData.type
+        );
+      }
+
       return { success: true, data: transaction };
     } catch (error) {
+      console.error('Transaction creation error:', error);
       return { success: false, error: '取引の作成に失敗しました' };
     }
   }

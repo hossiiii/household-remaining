@@ -1,5 +1,5 @@
 // 家計管理システムの基本型定義
-import { User as PrismaUser, Transaction as PrismaTransaction, PaymentMethod as PrismaPaymentMethod, Card as PrismaCard, Bank as PrismaBank } from '@prisma/client';
+import { User as PrismaUser, Transaction as PrismaTransaction, PaymentMethod as PrismaPaymentMethod, Card as PrismaCard, Bank as PrismaBank, Balance as PrismaBalance } from '@prisma/client';
 
 // Auth.js拡張型定義
 declare module 'next-auth' {
@@ -26,6 +26,7 @@ export type Transaction = PrismaTransaction;
 export type PaymentMethod = PrismaPaymentMethod;
 export type Card = PrismaCard;
 export type Bank = PrismaBank;
+export type Balance = PrismaBalance;
 
 // 旧型定義（後方互換性のため残す）
 export interface LegacyTransaction {
@@ -142,6 +143,28 @@ export type PaymentMethodWithRelations = PaymentMethod & {
   bank?: Bank;
 };
 
+export type BalanceWithBank = Balance & {
+  bank?: Bank;
+};
+
 export type TransactionWithPaymentMethod = Transaction & {
   paymentMethod: PaymentMethodWithRelations;
 };
+
+// 残高管理用の型定義
+export interface BalanceSummary {
+  cashBalance: number;
+  bankBalances: {
+    bankId: string;
+    bankName: string;
+    branchName?: string;
+    balance: number;
+  }[];
+  totalBalance: number;
+}
+
+export interface BalanceFormData {
+  type: 'CASH' | 'BANK';
+  bankId?: string;
+  amount: number;
+}
