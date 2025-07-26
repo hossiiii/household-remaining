@@ -76,7 +76,21 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 {transaction.dayOfWeek}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
-                {transaction.paymentMethod.name}
+                {(() => {
+                  let typeLabel = '';
+                  switch (transaction.paymentMethod.type) {
+                    case 'CASH':
+                      typeLabel = '[現金]';
+                      break;
+                    case 'CARD':
+                      typeLabel = '[カード]';
+                      break;
+                    case 'BANK':
+                      typeLabel = '[銀行]';
+                      break;
+                  }
+                  return `${typeLabel} ${transaction.paymentMethod.name}`;
+                })()}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {transaction.store || '-'}

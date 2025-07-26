@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import type { PaymentMethod } from '@/types';
+import type { PaymentMethodWithRelations } from '@/types';
 
 interface PaymentMethodTableProps {
-  paymentMethods: PaymentMethod[];
-  onEdit?: (paymentMethod: PaymentMethod) => void;
+  paymentMethods: PaymentMethodWithRelations[];
+  onEdit?: (paymentMethod: PaymentMethodWithRelations) => void;
   onDelete?: (id: string) => void;
   loading?: boolean;
 }
@@ -36,13 +36,21 @@ export const PaymentMethodTable: React.FC<PaymentMethodTableProps> = ({
   const getTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
       CASH: '現金',
-      CREDIT_CARD: 'クレジットカード',
-      DEBIT_CARD: 'デビットカード',
-      BANK_TRANSFER: '銀行振込',
-      ELECTRONIC_MONEY: '電子マネー',
-      OTHER: 'その他',
+      CARD: 'カード',
+      BANK: '銀行',
     };
     return typeMap[type] || type;
+  };
+
+  const getDescription = (paymentMethod: PaymentMethodWithRelations) => {
+    if (paymentMethod.type === 'CASH') {
+      return '現金支払い';
+    } else if (paymentMethod.type === 'CARD' && paymentMethod.card) {
+      return `${paymentMethod.card.type === 'CREDIT_CARD' ? 'クレジット' : 'プリペイド'}カード`;
+    } else if (paymentMethod.type === 'BANK' && paymentMethod.bank) {
+      return `銀行振込 (${paymentMethod.bank.branchName || '本店'})`;
+    }
+    return '-';
   };
 
   return (
@@ -77,7 +85,7 @@ export const PaymentMethodTable: React.FC<PaymentMethodTableProps> = ({
                 {getTypeLabel(paymentMethod.type)}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
-                -
+                {getDescription(paymentMethod)}
               </td>
               <td className="px-4 py-3 text-sm text-center border-b">
                 <span

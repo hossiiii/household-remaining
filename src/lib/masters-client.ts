@@ -1,9 +1,9 @@
-import type { PaymentMethod, Card, Bank, APIResponse } from '@/types';
+import type { PaymentMethod, PaymentMethodWithRelations, Card, Bank, APIResponse } from '@/types';
 
 export class MasterService {
-  static async getPaymentMethods(): Promise<APIResponse<PaymentMethod[]>> {
+  static async getPaymentMethods(): Promise<APIResponse<PaymentMethodWithRelations[]>> {
     try {
-      const response = await fetch('/api/masters/payment-methods');
+      const response = await fetch('/api/masters/payment-methods?initialize=true');
       const result = await response.json();
 
       if (!response.ok) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { MasterService } from '@/lib/masters';
-import { paymentMethodSchema } from '@/lib/validations';
+import { paymentMethodUpdateSchema } from '@/lib/validations';
 
 export async function PUT(
   request: NextRequest,
@@ -14,12 +14,19 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const validatedData = paymentMethodSchema.partial().parse(body);
+    const validatedData = paymentMethodUpdateSchema.parse(body);
+
+    // undefinedをnullに変換してPrismaスキーマとの互換性を保つ
+    const data = {
+      ...validatedData,
+      cardId: validatedData.cardId || null,
+      bankId: validatedData.bankId || null,
+    };
 
     const result = await MasterService.updatePaymentMethod(
       params.id,
       session.user.id,
-      validatedData
+      data
     );
 
     if (!result.success) {

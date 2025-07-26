@@ -1,13 +1,17 @@
 import { prisma } from './prisma';
-import type { PaymentMethod, Card, Bank, APIResponse } from '@/types';
+import type { PaymentMethod, PaymentMethodWithRelations, Card, Bank, APIResponse } from '@/types';
 
 export class MasterService {
-  static async getPaymentMethods(userId: string): Promise<APIResponse<PaymentMethod[]>> {
+  static async getPaymentMethods(userId: string): Promise<APIResponse<PaymentMethodWithRelations[]>> {
     try {
       const paymentMethods = await prisma.paymentMethod.findMany({
         where: {
           userId,
           isActive: true,
+        },
+        include: {
+          card: true,
+          bank: true,
         },
         orderBy: { name: 'asc' },
       });
@@ -170,6 +174,92 @@ export class MasterService {
       return { success: true, data: bank };
     } catch (error) {
       return { success: false, error: '銀行情報の更新に失敗しました' };
+    }
+  }
+
+  // 新しい支払い方法システム用メソッド
+  static async initializePaymentMethods(userId: string): Promise<APIResponse<void>> {
+    try {
+      // 現金支払い方法を作成
+      await prisma.paymentMethod.upsert({
+        where: {
+          userId_name: {
+            userId,
+            name: '現金',
+          },
+        },
+        update: {},
+        create: {
+          userId,
+          name: '現金',
+          type: 'CASH',
+          isActive: true,
+        },
+      });
+
+      // カードマスタから支払い方法を生成
+      const cards = await prisma.card.findMany({
+        where: { userId, isActive: true },
+      });
+
+      for (const card of cards) {
+        await prisma.paymentMethod.upsert({
+          where: {
+            userId_cardId: {
+              userId,
+              cardId: card.id,
+            },
+          },
+          update: {},
+          create: {
+            userId,
+            name: card.name,
+            type: 'CARD',
+            cardId: card.id,
+            isActive: true,
+          },
+        });
+      }
+
+      // 銀行マスタから支払い方法を生成
+      const banks = await prisma.bank.findMany({
+        where: { userId, isActive: true },
+      });
+
+      for (const bank of banks) {
+        await prisma.paymentMethod.upsert({
+          where: {
+            userId_bankId: {
+              userId,
+              bankId: bank.id,
+            },
+          },
+          update: {},
+          create: {
+            userId,
+            name: bank.name,
+            type: 'BANK',
+            bankId: bank.id,
+            isActive: true,
+          },
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: '支払い方法の初期化に失敗しました' };
+    }
+  }
+
+  static async getAvailablePaymentMethods(userId: string): Promise<APIResponse<PaymentMethodWithRelations[]>> {
+    try {
+      // 支払い方法を初期化
+      await this.initializePaymentMethods(userId);
+      
+      // 初期化後の支払い方法を取得
+      return await this.getPaymentMethods(userId);
+    } catch (error) {
+      return { success: false, error: '利用可能な支払い方法の取得に失敗しました' };
     }
   }
 }
