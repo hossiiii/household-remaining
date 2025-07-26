@@ -211,7 +211,7 @@ export function parseCSVFile(file: File): Promise<any[]> {
               resolve(results.data);
             }
           },
-          error: (error) => {
+          error: (error: any) => {
             reject(new Error(`CSV 読み込み エラー: ${error.message}`));
           }
         });
@@ -228,7 +228,7 @@ export function parseCSVFile(file: File): Promise<any[]> {
               resolve(results.data);
             }
           },
-          error: (error) => {
+          error: (error: any) => {
             reject(new Error(`CSV 読み込み エラー: ${error.message}`));
           }
         });

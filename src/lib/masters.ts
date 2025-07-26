@@ -16,7 +16,14 @@ export class MasterService {
         orderBy: { name: 'asc' },
       });
 
-      return { success: true, data: paymentMethods };
+      // null を undefined に変換
+      const paymentMethodsWithRelations = paymentMethods.map(pm => ({
+        ...pm,
+        card: pm.card || undefined,
+        bank: pm.bank || undefined,
+      }));
+
+      return { success: true, data: paymentMethodsWithRelations };
     } catch (error) {
       return { success: false, error: '支払い方法の取得に失敗しました' };
     }

@@ -93,6 +93,8 @@ export const MastersPageClient: React.FC = () => {
       name: data.name,
       type: data.type,
       isActive: data.isActive ?? true,
+      bankId: data.bankId || null,
+      cardId: data.cardId || null,
     };
     const result = await MasterService.createPaymentMethod(paymentMethodData);
     if (result.success) {

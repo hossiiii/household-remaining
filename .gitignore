@@ -36,7 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
-/prisma/migrations
+# /prisma/migrations  # Vercel needs migration files
 
 # IDE
 .vscode/
