@@ -13,6 +13,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force",
+    "supabase:migrate": "npx prisma migrate deploy",
+    "supabase:seed": "npm run db:seed",
     "postinstall": "prisma generate"
   },
   "dependencies": {

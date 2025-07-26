@@ -140,15 +140,8 @@ async function main() {
     }),
     // カード系支払い方法
     ...cards.map(card => 
-      prisma.paymentMethod.upsert({
-        where: {
-          userId_cardId: {
-            userId: user.id,
-            cardId: card.id,
-          },
-        },
-        update: {},
-        create: {
+      prisma.paymentMethod.create({
+        data: {
           userId: user.id,
           name: card.name,
           type: 'CARD',
@@ -158,15 +151,8 @@ async function main() {
     ),
     // 銀行系支払い方法
     ...banks.map(bank => 
-      prisma.paymentMethod.upsert({
-        where: {
-          userId_bankId: {
-            userId: user.id,
-            bankId: bank.id,
-          },
-        },
-        update: {},
-        create: {
+      prisma.paymentMethod.create({
+        data: {
           userId: user.id,
           name: bank.name,
           type: 'BANK',

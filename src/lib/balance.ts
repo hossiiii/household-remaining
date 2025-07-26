@@ -18,7 +18,7 @@ export class BalanceService {
         .map(b => ({
           bankId: b.bankId!,
           bankName: b.bank!.name,
-          branchName: b.bank!.branchName,
+          branchName: b.bank!.branchName || undefined,
           balance: b.amount.toNumber(),
         }));
 
@@ -102,13 +102,11 @@ export class BalanceService {
       const changeAmount = transactionType === 'INCOME' ? amount : -amount;
 
       // 現在の残高を取得
-      const currentBalance = await prisma.balance.findUnique({
+      const currentBalance = await prisma.balance.findFirst({
         where: {
-          userId_type_bankId: {
-            userId,
-            type: balanceType,
-            bankId: balanceType === 'BANK' ? bankId : null,
-          },
+          userId,
+          type: balanceType,
+          bankId: balanceType === 'BANK' ? bankId : null,
         },
       });
 
@@ -195,7 +193,13 @@ export class BalanceService {
         ],
       });
 
-      return { success: true, data: balances };
+      // null を undefined に変換
+      const balancesWithBank = balances.map(balance => ({
+        ...balance,
+        bank: balance.bank || undefined,
+      }));
+
+      return { success: true, data: balancesWithBank };
     } catch (error) {
       console.error('残高一覧取得エラー:', error);
       return { success: false, error: '残高一覧の取得に失敗しました' };
