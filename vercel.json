@@ -1,13 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "installCommand": "npm ci",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
-    }
-  ],
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "env": {
     "DATABASE_URL": "@database_url",
     "NEXTAUTH_SECRET": "@nextauth_secret",
@@ -15,7 +9,8 @@
   },
   "build": {
     "env": {
-      "DATABASE_URL": "@database_url"
+      "DATABASE_URL": "@database_url",
+      "SKIP_ENV_VALIDATION": "true"
     }
   }
 }
