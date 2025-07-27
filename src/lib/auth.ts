@@ -5,6 +5,22 @@ import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
+// Vercel環境での動的URL取得関数
+function getBaseUrl(): string {
+  // Vercelのプレビューデプロイメントの場合
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // 明示的にNEXTAUTH_URLが設定されている場合
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  
+  // フォールバック（開発環境など）
+  return 'http://localhost:3000';
+}
+
 // ログインフォームのバリデーションスキーマ
 const signInSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
@@ -77,19 +93,21 @@ const authConfig: NextAuthConfig = {
     },
     async redirect({ url, baseUrl }) {
       // ログイン成功後のリダイレクト処理
+      // Vercel環境を考慮した動的なbaseUrlを使用
+      const dynamicBaseUrl = getBaseUrl();
       
-      // 相対パスの場合は baseUrl を追加
+      // 相対パスの場合は dynamicBaseUrl を追加
       if (url.startsWith('/')) {
-        return `${baseUrl}${url}`;
+        return `${dynamicBaseUrl}${url}`;
       }
       
       // 同一ドメインの場合はそのまま返す
-      if (new URL(url).origin === baseUrl) {
+      if (new URL(url).origin === dynamicBaseUrl) {
         return url;
       }
       
       // デフォルトはダッシュボードにリダイレクト
-      return `${baseUrl}/dashboard`;
+      return `${dynamicBaseUrl}/dashboard`;
     },
   },
   session: { 
