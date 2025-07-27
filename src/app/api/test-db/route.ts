@@ -20,12 +20,16 @@ export async function GET() {
       result
     });
   } catch (error) {
+    // 環境変数の確認（値の一部をマスク）
+    const dbUrl = process.env.DATABASE_URL || '';
+    const maskedUrl = dbUrl.replace(/postgres:([^@]+)@/, 'postgres:***@');
+    
     console.error('Database connection error:', error);
     
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      dbUrl: process.env.DATABASE_URL ? 'Set (masked)' : 'Not set',
+      dbUrl: process.env.DATABASE_URL ? maskedUrl : 'Not set',
       nodeEnv: process.env.NODE_ENV,
     }, { status: 500 });
   }
