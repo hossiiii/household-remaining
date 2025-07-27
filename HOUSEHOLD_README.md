@@ -6,7 +6,9 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 
 - **ユーザー認証**: メール・パスワードによるログイン/登録機能
 - **取引管理**: 収入・支出の記録、編集、削除、フィルタリング
+- **残高管理**: 現金・銀行口座の残高表示と管理、自動計算機能
 - **マスタデータ管理**: 支払い方法、カード情報、銀行情報の設定
+- **CSV入出力**: 取引データのインポート・エクスポート機能（データ検証付き）
 - **ダッシュボード**: 収支の統計情報表示、最近の取引一覧
 - **レスポンシブデザイン**: PCとモバイルデバイスに対応
 - **データベースシード**: 初期データの投入機能
@@ -29,6 +31,7 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 ### バリデーション・ユーティリティ
 - **Zod**: スキーマ検証
 - **React Hook Form**: フォーム管理（フォームコンポーネント内で使用）
+- **PapaParse**: CSVファイルの解析・処理
 
 ## プロジェクト構成
 
@@ -42,13 +45,17 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 │   │   ├── auth/            # 認証ページ
 │   │   ├── dashboard/       # ダッシュボード
 │   │   ├── transactions/    # 取引管理
+│   │   ├── balance/         # 残高管理
 │   │   ├── masters/        # マスタデータ管理
+│   │   ├── import-export/   # CSV入出力
 │   │   ├── layout.tsx      # ルートレイアウト
 │   │   └── page.tsx        # ホームページ
 │   ├── components/          # Reactコンポーネント
 │   │   ├── auth/           # 認証関連
 │   │   ├── transactions/   # 取引管理
+│   │   ├── balance/        # 残高管理
 │   │   ├── masters/        # マスタデータ
+│   │   ├── import-export/  # CSV入出力
 │   │   ├── layout/         # レイアウト
 │   │   └── ui/             # UIコンポーネント
 │   ├── lib/                # ライブラリ・ユーティリティ
@@ -56,10 +63,15 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 │   │   ├── prisma.ts       # Prismaクライアント
 │   │   ├── validations.ts  # Zodスキーマ
 │   │   ├── utils.ts        # ユーティリティ関数
+│   │   ├── csv-utils.ts    # CSV処理ユーティリティ
 │   │   ├── transactions.ts # 取引サービス（サーバー側）
 │   │   ├── transactions-client.ts # 取引サービス（クライアント側）
+│   │   ├── balance.ts      # 残高サービス（サーバー側）
+│   │   ├── balance-client.ts # 残高サービス（クライアント側）
 │   │   ├── masters.ts      # マスタサービス（サーバー側）
-│   │   └── masters-client.ts # マスタサービス（クライアント側）
+│   │   ├── masters-client.ts # マスタサービス（クライアント側）
+│   │   ├── import-export-client.ts # CSV入出力サービス（クライアント側）
+│   │   └── register.ts     # ユーザー登録処理
 │   ├── types/              # TypeScript型定義
 │   └── middleware.ts       # Next.jsミドルウェア（認証保護）
 ├── docker-compose.yml      # PostgreSQL開発環境
@@ -147,9 +159,21 @@ npm run dev
 - 日付、支払い方法、種別でフィルタリング可能
 - ページネーション対応
 
-### 4. マスタデータ管理
+### 4. 残高管理
+- `/balance` で現金と銀行口座の残高を確認
+- 取引データから自動計算される残高表示
+- 手動での残高調整機能
+- 残高の再計算機能
+
+### 5. マスタデータ管理
 - `/masters` で支払い方法、カード、銀行情報を管理
 - タブ切り替えで各種マスタデータを設定
+
+### 6. CSV入出力
+- `/import-export` でデータのインポート・エクスポート
+- CSVファイルからの取引データ一括インポート
+- 条件指定によるデータエクスポート
+- インポート前のデータ検証機能
 
 ## 開発用コマンド
 
