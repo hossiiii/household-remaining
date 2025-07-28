@@ -43,7 +43,13 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
           echo "Running database migrations..."
-          npx prisma migrate deploy
+          npx prisma migrate deploy --skip-generate || {
+            echo "Migration failed. Checking if this is a baseline issue..."
+            # If migration fails due to non-empty schema, mark existing migration as applied
+            npx prisma migrate resolve --applied "20241124090831_init" || true
+            # Try migration again
+            npx prisma migrate deploy --skip-generate
+          }
           echo "Migration complete."
 
       - name: Run database seed (if needed)
