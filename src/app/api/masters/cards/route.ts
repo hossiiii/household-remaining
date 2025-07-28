@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
     const data = {
       name: validatedData.name,
       type: validatedData.type,
+      closingDay: validatedData.closingDay,
       withdrawalDay: validatedData.withdrawalDay,
+      withdrawalMonthOffset: validatedData.withdrawalMonthOffset,
       withdrawalBankId: validatedData.withdrawalBankId,
       isActive: validatedData.isActive ?? true,
     };

@@ -23,7 +23,9 @@ export const CardForm: React.FC<CardFormProps> = ({
   const [formData, setFormData] = useState<CardFormData>({
     name: initialData?.name || '',
     type: initialData?.type || 'CREDIT_CARD',
+    closingDay: initialData?.closingDay || 1,
     withdrawalDay: initialData?.withdrawalDay || 1,
+    withdrawalMonthOffset: initialData?.withdrawalMonthOffset || 1,
     withdrawalBankId: initialData?.withdrawalBankId || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
@@ -122,6 +124,32 @@ export const CardForm: React.FC<CardFormProps> = ({
           value={formData.type}
           onChange={(e) => handleInputChange('type', e.target.value as CardFormData['type'])}
           error={errors.type}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="締日"
+          type="number"
+          min="1"
+          max="31"
+          value={formData.closingDay}
+          onChange={(e) => handleInputChange('closingDay', Number(e.target.value))}
+          error={errors.closingDay}
+          placeholder="例: 15"
+          required
+        />
+
+        <Select
+          label="引き落とし月"
+          options={[
+            { value: '1', label: '翌月' },
+            { value: '2', label: '翌々月' },
+          ]}
+          value={formData.withdrawalMonthOffset.toString()}
+          onChange={(e) => handleInputChange('withdrawalMonthOffset', Number(e.target.value) as 1 | 2)}
+          error={errors.withdrawalMonthOffset}
           required
         />
       </div>

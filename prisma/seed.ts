@@ -79,7 +79,9 @@ async function main() {
         userId: user.id,
         name: 'メインクレジットカード',
         type: 'CREDIT_CARD',
-        withdrawalDay: 10,
+        closingDay: 15,              // 15日締め
+        withdrawalDay: 10,           // 10日引き落とし
+        withdrawalMonthOffset: 1,    // 翌月
         withdrawalBankId: banks[0].id, // みずほ銀行
       },
     }),
@@ -88,7 +90,9 @@ async function main() {
         userId: user.id,
         name: '楽天カード',
         type: 'CREDIT_CARD',
-        withdrawalDay: 27,
+        closingDay: 31,              // 月末締め
+        withdrawalDay: 27,           // 27日引き落とし
+        withdrawalMonthOffset: 1,    // 翌月
         withdrawalBankId: banks[1].id, // 三菱UFJ銀行
       },
     }),
@@ -97,7 +101,9 @@ async function main() {
         userId: user.id,
         name: 'イオンカード',
         type: 'CREDIT_CARD',
-        withdrawalDay: 2,
+        closingDay: 10,              // 10日締め
+        withdrawalDay: 2,            // 2日引き落とし
+        withdrawalMonthOffset: 2,    // 翌々月
         withdrawalBankId: banks[2].id, // 三井住友銀行
       },
     }),
@@ -106,7 +112,9 @@ async function main() {
         userId: user.id,
         name: 'Amazonプリペイドカード',
         type: 'PREPAID_CARD',
-        withdrawalDay: 1,
+        closingDay: 1,               // 1日締め（プリペイドは即時）
+        withdrawalDay: 1,            // 1日引き落とし
+        withdrawalMonthOffset: 1,    // 翌月
         withdrawalBankId: banks[0].id,
       },
     }),
@@ -115,7 +123,9 @@ async function main() {
         userId: user.id,
         name: 'PayPayカード',
         type: 'CREDIT_CARD',
-        withdrawalDay: 25,
+        closingDay: 20,              // 20日締め
+        withdrawalDay: 25,           // 25日引き落とし
+        withdrawalMonthOffset: 1,    // 翌月
         withdrawalBankId: banks[3].id, // ゆうちょ銀行
       },
     }),

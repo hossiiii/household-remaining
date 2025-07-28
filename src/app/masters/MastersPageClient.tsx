@@ -128,7 +128,9 @@ export const MastersPageClient: React.FC = () => {
     const cardData = {
       name: data.name,
       type: data.type,
+      closingDay: data.closingDay,
       withdrawalDay: data.withdrawalDay,
+      withdrawalMonthOffset: data.withdrawalMonthOffset,
       withdrawalBankId: data.withdrawalBankId,
       isActive: data.isActive ?? true,
     };
