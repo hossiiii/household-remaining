@@ -167,7 +167,15 @@ async function main() {
   console.log(`✅ 支払い方法作成完了: ${paymentMethods.length}件`);
 
   // より現実的な取引データの作成（過去3ヶ月分）
-  const transactionData = [];
+  const transactionData: Array<{
+    date: Date;
+    dayOfWeek: string;
+    paymentMethodId: string;
+    store: string | null;
+    purpose: string;
+    type: string;
+    amount: number;
+  }> = [];
   const startDate = new Date('2024-10-01');
   const endDate = new Date('2024-12-31');
 
