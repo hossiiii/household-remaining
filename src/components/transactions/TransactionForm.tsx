@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import type { TransactionFormData, PaymentMethod } from '@/types';
 import { MasterService } from '@/lib/masters-client';
-import { formatDate, validateAmount } from '@/lib/utils';
+import { formatDateForInput, validateAmount } from '@/lib/utils';
 
 interface TransactionFormProps {
   initialData?: Partial<TransactionFormData>;
@@ -22,7 +22,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   loading = false,
 }) => {
   const [formData, setFormData] = useState<TransactionFormData>({
-    date: initialData?.date || formatDate(new Date()),
+    date: initialData?.date || formatDateForInput(new Date()),
     paymentMethodId: initialData?.paymentMethodId || '',
     store: initialData?.store || '',
     purpose: initialData?.purpose || '',
