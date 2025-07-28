@@ -59,7 +59,11 @@ export const cardSchema = z.object({
   type: z.enum(['CREDIT_CARD', 'PREPAID_CARD'], {
     required_error: 'カード種別を選択してください',
   }),
+  closingDay: z.number().min(1).max(31),
   withdrawalDay: z.number().min(1).max(31),
+  withdrawalMonthOffset: z.enum([1, 2], {
+    required_error: '引き落とし月を選択してください',
+  }),
   withdrawalBankId: z.string().min(1, '引き落とし銀行を選択してください'),
   isActive: z.boolean().default(true),
 });
