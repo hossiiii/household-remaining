@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { BalanceService } from './balance';
+import { calculateWithdrawalDate, type CardConfig } from './card-utils';
 import type {
   Transaction,
   TransactionFormData,
@@ -26,15 +27,30 @@ export class TransactionService {
       // 支払い方法を取得して残高更新の準備
       const paymentMethod = await prisma.paymentMethod.findUnique({
         where: { id: data.paymentMethodId },
-        include: { bank: true },
+        include: { bank: true, card: true },
       });
 
       if (!paymentMethod) {
         return { success: false, error: '指定された支払い方法が見つかりません' };
       }
 
+      // カード取引の場合は引き落とし日を自動計算
+      let cardWithdrawalDate: Date | undefined;
+      if (paymentMethod.type === 'CARD' && paymentMethod.card) {
+        const cardConfig: CardConfig = {
+          closingDay: paymentMethod.card.closingDay,
+          withdrawalDay: paymentMethod.card.withdrawalDay,
+          withdrawalMonthOffset: paymentMethod.card.withdrawalMonthOffset
+        };
+        cardWithdrawalDate = calculateWithdrawalDate(new Date(data.date), cardConfig);
+      }
+
       const transaction = await prisma.transaction.create({
-        data: transactionData,
+        data: {
+          ...transactionData,
+          cardAmount: paymentMethod.type === 'CARD' ? data.amount : null,
+          cardWithdrawalDate
+        },
         include: {
           paymentMethod: {
             include: {
