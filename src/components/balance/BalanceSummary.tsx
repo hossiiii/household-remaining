@@ -56,7 +56,7 @@ export const BalanceSummaryComponent: React.FC = () => {
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">残高管理</h2>
+        <h2 className="text-xl font-bold text-gray-900">現在の残高</h2>
         <Button
           onClick={handleRecalculate}
           loading={recalculateLoading}
@@ -143,7 +143,7 @@ export const BalanceSummaryComponent: React.FC = () => {
           </div>
           <div className="ml-3">
             <p className="text-sm text-yellow-800">
-              残高は取引データから自動計算されます。手動で調整が必要な場合は、残高管理画面で編集してください。
+              残高は取引データから自動計算されます。手動で調整が必要な場合は、上部の「残高を編集」ボタンから編集してください。
             </p>
           </div>
         </div>

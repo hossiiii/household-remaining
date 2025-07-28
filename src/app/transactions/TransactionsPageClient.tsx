@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { BalanceSummaryComponent } from '@/components/balance/BalanceSummary';
+import { BalanceEditForm } from '@/components/balance/BalanceEditForm';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -29,6 +31,8 @@ export const TransactionsPageClient: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [showHistoricalBalance, setShowHistoricalBalance] = useState(false);
+  const [showBalanceEditForm, setShowBalanceEditForm] = useState(false);
+  const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -211,6 +215,11 @@ export const TransactionsPageClient: React.FC = () => {
     }
   };
 
+  const handleBalanceEditSuccess = () => {
+    setShowBalanceEditForm(false);
+    setBalanceRefreshKey(prev => prev + 1); // 残高サマリーを再読み込み
+  };
+
   if (!session) {
     return <div>ログインが必要です</div>;
   }
@@ -236,6 +245,12 @@ export const TransactionsPageClient: React.FC = () => {
         <div className="flex space-x-2">
           <Button
             variant="secondary"
+            onClick={() => setShowBalanceEditForm(true)}
+          >
+            残高を編集
+          </Button>
+          <Button
+            variant="secondary"
             onClick={handleExportCSV}
           >
             CSVエクスポート
@@ -249,6 +264,11 @@ export const TransactionsPageClient: React.FC = () => {
             新規取引
           </Button>
         </div>
+      </div>
+
+      {/* 残高サマリー */}
+      <div key={balanceRefreshKey} className="mb-8">
+        <BalanceSummaryComponent />
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow mb-6">
@@ -359,6 +379,14 @@ export const TransactionsPageClient: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 残高編集モーダル */}
+      {showBalanceEditForm && (
+        <BalanceEditForm
+          onSuccess={handleBalanceEditSuccess}
+          onCancel={() => setShowBalanceEditForm(false)}
+        />
+      )}
     </div>
   );
 };
