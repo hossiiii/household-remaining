@@ -88,4 +88,39 @@ export class ImportExportService {
       return { success: false, error: 'CSVファイルの検証に失敗しました' };
     }
   }
+
+  // 履歴残高付きCSVエクスポート
+  static async exportCSVWithBalance(filter: ExportFilter = {}): Promise<APIResponse<string>> {
+    try {
+      const params = new URLSearchParams();
+      
+      // 履歴残高付きエクスポートを指定
+      params.append('withHistoricalBalance', 'true');
+      
+      if (filter.startDate) {
+        params.append('startDate', filter.startDate.toISOString());
+      }
+      if (filter.endDate) {
+        params.append('endDate', filter.endDate.toISOString());
+      }
+      if (filter.paymentMethodId) {
+        params.append('paymentMethodId', filter.paymentMethodId);
+      }
+      if (filter.type && filter.type !== 'all') {
+        params.append('type', filter.type);
+      }
+
+      const response = await fetch(`/api/import-export/export?${params}`);
+      
+      if (!response.ok) {
+        const result = await response.json();
+        return { success: false, error: result.error || '履歴残高付きCSVファイルのエクスポートに失敗しました' };
+      }
+
+      const csvContent = await response.text();
+      return { success: true, data: csvContent };
+    } catch (error) {
+      return { success: false, error: '履歴残高付きCSVファイルのエクスポートに失敗しました' };
+    }
+  }
 }

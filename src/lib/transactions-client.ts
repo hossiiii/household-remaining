@@ -2,9 +2,11 @@ import type {
   Transaction,
   TransactionFormData,
   TransactionFilter,
+  TransactionWithHistoricalBalance,
   PaginatedResponse,
   PaginationParams,
-  APIResponse
+  APIResponse,
+  Bank
 } from '@/types';
 
 export class TransactionService {
@@ -115,6 +117,42 @@ export class TransactionService {
       return { success: true, data: result };
     } catch (error) {
       return { success: false, error: '取引の取得に失敗しました' };
+    }
+  }
+
+  // 履歴残高付き取引取得
+  static async getTransactionsWithBalance(
+    filter: TransactionFilter = {},
+    pagination: PaginationParams = { page: 1, limit: 20 }
+  ): Promise<APIResponse<{
+    transactions: TransactionWithHistoricalBalance[];
+    banks: Bank[];
+    pagination: any;
+  }>> {
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        withHistoricalBalance: 'true',
+      });
+
+      if (filter.type) params.append('type', filter.type);
+      if (filter.paymentMethodId) params.append('paymentMethodId', filter.paymentMethodId);
+      if (filter.store) params.append('store', filter.store);
+      if (filter.purpose) params.append('purpose', filter.purpose);
+      if (filter.startDate) params.append('startDate', filter.startDate.toISOString());
+      if (filter.endDate) params.append('endDate', filter.endDate.toISOString());
+
+      const response = await fetch(`/api/transactions?${params}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result.error || '履歴残高付き取引の取得に失敗しました' };
+      }
+
+      return { success: true, data: result };
+    } catch (error) {
+      return { success: false, error: '履歴残高付き取引の取得に失敗しました' };
     }
   }
 }

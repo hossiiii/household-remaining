@@ -1,6 +1,12 @@
 import Papa from 'papaparse';
 import { csvRowSchema } from '@/lib/validations';
-import type { TransactionFormData, TransactionWithPaymentMethod, CSVImportData } from '@/types';
+import type { 
+  TransactionFormData, 
+  TransactionWithPaymentMethod, 
+  TransactionWithHistoricalBalance,
+  CSVImportData,
+  Bank 
+} from '@/types';
 
 // CSVフィールドマッピング: 日本語ヘッダー → 英語フィールド名
 const FIELD_MAPPING: Record<string, string> = {
@@ -247,4 +253,61 @@ export function generateCSVFilename(prefix: string = 'transactions'): string {
   const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
   const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
   return `${prefix}_${dateStr}_${timeStr}.csv`;
+}
+
+/**
+ * 履歴残高付きデータをCSV形式に変換（UTF-8 BOM付き）
+ */
+export function generateTransactionCSVWithBalance(
+  transactions: TransactionWithHistoricalBalance[],
+  banks: Bank[]
+): string {
+  const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+
+  // 動的なヘッダーを生成
+  const staticHeaders = ['日付', '支払方法', '店舗', '用途', '種別', '金額', '現金取引額', '現金残高'];
+  const dynamicHeaders = banks.flatMap(bank => [
+    `${bank.name}取引額`,
+    `${bank.name}残高`
+  ]);
+  const headers = [...staticHeaders, ...dynamicHeaders];
+
+  // データ行を生成
+  const csvData = transactions.map(transaction => {
+    const staticData = [
+      transaction.date.toISOString().split('T')[0], // YYYY-MM-DD format
+      `[${transaction.paymentMethod.name}]`,
+      transaction.store || '',
+      transaction.purpose || '',
+      transaction.type === 'INCOME' ? '収入' : '支出',
+      transaction.amount.toString(),
+      transaction.transactionImpact.cashAmount?.toString() || '',
+      transaction.historicalBalance.cash.toString(),
+    ];
+
+    // 動的な銀行データを追加
+    const dynamicData = banks.flatMap(bank => {
+      const bankBalance = transaction.historicalBalance.banks.find(b => b.bankId === bank.id);
+      const bankTransaction = transaction.transactionImpact.bankTransactions?.find(b => b.bankId === bank.id);
+      
+      return [
+        bankTransaction?.amount.toString() || '',
+        bankBalance?.balance.toString() || '0',
+      ];
+    });
+
+    return [...staticData, ...dynamicData];
+  });
+
+  // Papa Parse を使ってCSVを生成
+  const csvContent = Papa.unparse({
+    fields: headers,
+    data: csvData
+  }, {
+    header: true,
+    delimiter: ',',
+    newline: '\r\n' // Windows compatibility
+  });
+
+  return BOM + csvContent;
 }

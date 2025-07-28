@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TransactionService } from '@/lib/transactions';
-import { generateTransactionCSV, generateCSVFilename } from '@/lib/csv-utils';
+import { HistoricalBalanceService } from '@/lib/historical-balance';
+import { generateTransactionCSV, generateTransactionCSVWithBalance, generateCSVFilename } from '@/lib/csv-utils';
 import type { TransactionFilter } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined;
     const paymentMethodId = searchParams.get('paymentMethodId') || undefined;
     const type = searchParams.get('type') as 'income' | 'expense' | 'all' || 'all';
+    const withHistoricalBalance = searchParams.get('withHistoricalBalance') === 'true';
 
     // Validate date parameters
     if (startDate && isNaN(startDate.getTime())) {
@@ -37,28 +39,52 @@ export async function GET(request: NextRequest) {
       endDate,
     };
 
-    // Get all transactions (without pagination for export)
-    const result = await TransactionService.getTransactions(
-      session.user.id,
-      filter,
-      { page: 1, limit: 10000 } // Large limit to get all matching transactions
-    );
+    let csvContent: string;
+    let filename: string;
 
-    if (!result.success || !result.data) {
-      return NextResponse.json({ error: result.error || '取引データの取得に失敗しました' }, { status: 500 });
+    // 履歴残高付きエクスポートの場合
+    if (withHistoricalBalance) {
+      const result = await HistoricalBalanceService.getTransactionsWithHistoricalBalance(
+        session.user.id,
+        filter,
+        { page: 1, limit: 10000 } // Large limit to get all matching transactions
+      );
+
+      if (!result.success || !result.data) {
+        return NextResponse.json({ error: result.error || '履歴残高付き取引データの取得に失敗しました' }, { status: 500 });
+      }
+
+      const { transactions, banks } = result.data;
+
+      if (transactions.length === 0) {
+        return NextResponse.json({ error: 'エクスポートする取引データがありません' }, { status: 404 });
+      }
+
+      // Generate CSV content with historical balance
+      csvContent = generateTransactionCSVWithBalance(transactions, banks);
+      filename = generateCSVFilename('transactions_with_balance');
+    } else {
+      // 通常のエクスポート
+      const result = await TransactionService.getTransactions(
+        session.user.id,
+        filter,
+        { page: 1, limit: 10000 } // Large limit to get all matching transactions
+      );
+
+      if (!result.success || !result.data) {
+        return NextResponse.json({ error: result.error || '取引データの取得に失敗しました' }, { status: 500 });
+      }
+
+      const transactions = result.data.data as any[];
+
+      if (transactions.length === 0) {
+        return NextResponse.json({ error: 'エクスポートする取引データがありません' }, { status: 404 });
+      }
+
+      // Generate CSV content
+      csvContent = generateTransactionCSV(transactions);
+      filename = generateCSVFilename('transactions');
     }
-
-    const transactions = result.data.data as any[];
-
-    if (transactions.length === 0) {
-      return NextResponse.json({ error: 'エクスポートする取引データがありません' }, { status: 404 });
-    }
-
-    // Generate CSV content
-    const csvContent = generateTransactionCSV(transactions);
-
-    // Generate filename
-    const filename = generateCSVFilename('transactions');
 
     // Return CSV response with appropriate headers
     return new NextResponse(csvContent, {

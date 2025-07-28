@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import type { TransactionWithPaymentMethod } from '@/types';
+import { BalanceCell, BalanceHeaderCell } from './BalanceCell';
+import type { TransactionWithPaymentMethod, TransactionWithHistoricalBalance, Bank } from '@/types';
 import { TransactionType } from '@prisma/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
@@ -11,6 +12,9 @@ interface TransactionTableProps {
   onEdit?: (transaction: any) => void;
   onDelete?: (id: string) => void;
   loading?: boolean;
+  // 履歴残高表示用のオプション
+  withHistoricalBalance?: boolean;
+  banks?: Bank[];
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -18,6 +22,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   onEdit,
   onDelete,
   loading = false,
+  withHistoricalBalance = false,
+  banks = [],
 }) => {
   if (loading) {
     return (
@@ -64,6 +70,19 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               操作
             </th>
+            {/* 履歴残高表示の場合は追加のヘッダー */}
+            {withHistoricalBalance && (
+              <>
+                <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                  <BalanceHeaderCell type="cash" label="現金" />
+                </th>
+                {banks.map((bank) => (
+                  <th key={bank.id} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                    <BalanceHeaderCell type="bank" label={bank.name} />
+                  </th>
+                ))}
+              </>
+            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -147,6 +166,44 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   )}
                 </div>
               </td>
+              {/* 履歴残高表示の場合は追加のセル */}
+              {withHistoricalBalance && transaction.historicalBalance && (
+                <>
+                  {/* 現金列 */}
+                  <td className="px-2 py-3 text-sm border-b">
+                    <BalanceCell
+                      transactionAmount={transaction.transactionImpact?.cashAmount}
+                      currentBalance={transaction.historicalBalance.cash}
+                      isTransactionTarget={transaction.paymentMethod.type === 'CASH'}
+                      type="cash"
+                    />
+                  </td>
+                  {/* 銀行列 */}
+                  {banks.map((bank) => {
+                    const bankBalance = transaction.historicalBalance.banks.find(
+                      (b: any) => b.bankId === bank.id
+                    );
+                    const bankTransaction = transaction.transactionImpact?.bankTransactions?.find(
+                      (bt: any) => bt.bankId === bank.id
+                    );
+                    
+                    return (
+                      <td key={bank.id} className="px-2 py-3 text-sm border-b">
+                        <BalanceCell
+                          transactionAmount={bankTransaction?.amount}
+                          currentBalance={bankBalance?.balance || 0}
+                          isTransactionTarget={
+                            transaction.paymentMethod.type === 'BANK' && 
+                            transaction.paymentMethod.bankId === bank.id
+                          }
+                          type="bank"
+                          label={bank.name}
+                        />
+                      </td>
+                    );
+                  })}
+                </>
+              )}
             </tr>
           ))}
         </tbody>
