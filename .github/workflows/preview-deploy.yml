@@ -62,7 +62,6 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--preview'
 
       - name: Notify Slack on Success
         if: success() && env.SLACK_WEBHOOK_URL != ''
