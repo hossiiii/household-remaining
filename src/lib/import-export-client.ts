@@ -11,6 +11,7 @@ export interface ExportFilter {
   endDate?: Date;
   paymentMethodId?: string;
   type?: 'income' | 'expense' | 'all';
+  withHistoricalBalance?: boolean;
 }
 
 export class ImportExportService {
@@ -51,6 +52,9 @@ export class ImportExportService {
       }
       if (filter.type && filter.type !== 'all') {
         params.append('type', filter.type);
+      }
+      if (filter.withHistoricalBalance) {
+        params.append('withHistoricalBalance', 'true');
       }
 
       const response = await fetch(`/api/import-export/export?${params}`);
