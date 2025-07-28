@@ -7,14 +7,14 @@ import { z } from 'zod';
 
 // Vercel環境での動的URL取得関数
 function getBaseUrl(): string {
+  // 明示的にNEXTAUTH_URLが設定されている場合（本番環境）
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  
   // Vercelのプレビューデプロイメントの場合
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  // 明示的にNEXTAUTH_URLが設定されている場合
-  if (process.env.NEXTAUTH_URL) {
-    return process.env.NEXTAUTH_URL;
   }
   
   // フォールバック（開発環境など）
