@@ -39,9 +39,11 @@ jobs:
           DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
         run: |
           echo "Running migrations on preview database..."
-          echo "Resetting database and applying all migrations..."
-          npx prisma migrate reset --force --skip-seed
-          echo "Database reset complete. Migrations applied."
+          echo "Generating Prisma Client..."
+          npx prisma generate
+          echo "Pushing schema to database..."
+          npx prisma db push --accept-data-loss
+          echo "Schema push complete."
 
       - name: Run database seed
         env:
