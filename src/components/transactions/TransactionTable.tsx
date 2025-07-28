@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import type { TransactionWithPaymentMethod } from '@/types';
+import { BalanceCell } from './BalanceCell';
+import type { TransactionWithPaymentMethod, TransactionWithHistoricalBalance } from '@/types';
 import { TransactionType } from '@prisma/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
@@ -11,6 +12,8 @@ interface TransactionTableProps {
   onEdit?: (transaction: any) => void;
   onDelete?: (id: string) => void;
   loading?: boolean;
+  showHistoricalBalance?: boolean;
+  banks?: { id: string; name: string }[];
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -18,6 +21,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   onEdit,
   onDelete,
   loading = false,
+  showHistoricalBalance = false,
+  banks = [],
 }) => {
   if (loading) {
     return (
@@ -64,6 +69,18 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               操作
             </th>
+            {showHistoricalBalance && (
+              <>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                  現金
+                </th>
+                {banks.map((bank) => (
+                  <th key={bank.id} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                    {bank.name}
+                  </th>
+                ))}
+              </>
+            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -147,6 +164,40 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   )}
                 </div>
               </td>
+              {showHistoricalBalance && (
+                <>
+                  {/* 現金残高列 */}
+                  <BalanceCell
+                    transactionAmount={
+                      (transaction as TransactionWithHistoricalBalance).transactionImpact?.cashAmount
+                    }
+                    currentBalance={
+                      (transaction as TransactionWithHistoricalBalance).historicalBalance?.cash || 0
+                    }
+                    isTransactionTarget={
+                      (transaction as TransactionWithHistoricalBalance).transactionImpact?.cashAmount !== undefined
+                    }
+                    type="cash"
+                  />
+                  {/* 銀行残高列 */}
+                  {banks.map((bank) => {
+                    const historicalBalance = (transaction as TransactionWithHistoricalBalance).historicalBalance;
+                    const bankBalance = historicalBalance?.banks.find(b => b.bankId === bank.id);
+                    const bankTransaction = (transaction as TransactionWithHistoricalBalance).transactionImpact?.bankTransactions?.find(t => t.bankId === bank.id);
+                    
+                    return (
+                      <BalanceCell
+                        key={bank.id}
+                        transactionAmount={bankTransaction?.amount}
+                        currentBalance={bankBalance?.balance || 0}
+                        isTransactionTarget={bankTransaction !== undefined}
+                        type="bank"
+                        label={bank.name}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </tr>
           ))}
         </tbody>

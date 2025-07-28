@@ -168,3 +168,29 @@ export interface BalanceFormData {
   bankId?: string;
   amount: number;
 }
+
+// 履歴残高管理用の型定義
+export interface HistoricalBalance {
+  cash: number;
+  banks: { bankId: string; bankName: string; balance: number }[];
+}
+
+export interface TransactionWithHistoricalBalance extends TransactionWithPaymentMethod {
+  historicalBalance: HistoricalBalance;
+  transactionImpact: {
+    cashAmount?: number;
+    bankTransactions?: { bankId: string; amount: number }[];
+  };
+}
+
+export interface CSVRowWithBalance {
+  date: string;
+  paymentMethod: string;
+  store: string;
+  purpose: string;
+  type: string;
+  amount: number;
+  cashTransaction: number | '';
+  cashBalance: number;
+  [key: string]: number | string; // 動的な銀行取引列・残高列
+}

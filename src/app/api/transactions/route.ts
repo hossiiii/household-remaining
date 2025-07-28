@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TransactionService } from '@/lib/transactions';
+import { HistoricalBalanceService } from '@/lib/historical-balance';
 import { transactionSchema } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     const purpose = searchParams.get('purpose') || undefined;
     const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined;
     const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined;
+    const withHistoricalBalance = searchParams.get('withHistoricalBalance') === 'true';
 
     const filter = {
       type: type as 'all' | 'income' | 'expense',
@@ -29,6 +31,22 @@ export async function GET(request: NextRequest) {
       endDate,
     };
 
+    // 履歴残高付きデータが要求された場合
+    if (withHistoricalBalance) {
+      const result = await HistoricalBalanceService.getTransactionsWithHistoricalBalance(
+        session.user.id,
+        filter,
+        { page, limit }
+      );
+
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+
+      return NextResponse.json(result.data);
+    }
+
+    // 通常の取引データ
     const result = await TransactionService.getTransactions(
       session.user.id,
       filter,

@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import { csvRowSchema } from '@/lib/validations';
-import type { TransactionFormData, TransactionWithPaymentMethod, CSVImportData } from '@/types';
+import type { TransactionFormData, TransactionWithPaymentMethod, TransactionWithHistoricalBalance, CSVImportData } from '@/types';
 
 // CSVフィールドマッピング: 日本語ヘッダー → 英語フィールド名
 const FIELD_MAPPING: Record<string, string> = {
@@ -150,6 +150,73 @@ export function generateTransactionCSV(transactions: TransactionWithPaymentMetho
     transaction.type === 'INCOME' ? '収入' : '支出',
     transaction.amount.toString()
   ]);
+
+  // Papa Parse を使ってCSVを生成
+  const csvContent = Papa.unparse({
+    fields: headers,
+    data: csvData
+  }, {
+    header: true,
+    delimiter: ',',
+    newline: '\r\n' // Windows compatibility
+  });
+
+  return BOM + csvContent;
+}
+
+/**
+ * 履歴残高付き取引データをCSV形式に変換（UTF-8 BOM付き）
+ */
+export function generateTransactionCSVWithBalance(
+  transactions: TransactionWithHistoricalBalance[],
+  banks: { id: string; name: string }[]
+): string {
+  const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+  
+  // 動的なヘッダーを生成
+  const baseHeaders = ['日付', '支払方法', '店舗', '用途', '種別', '金額'];
+  const balanceHeaders = ['現金取引額', '現金残高'];
+  
+  // 銀行別のヘッダーを追加
+  const bankHeaders = banks.flatMap(bank => [
+    `${bank.name}取引額`,
+    `${bank.name}残高`
+  ]);
+  
+  const headers = [...baseHeaders, ...balanceHeaders, ...bankHeaders];
+  
+  // データ行を生成
+  const csvData = transactions.map(transaction => {
+    const baseData = [
+      transaction.date.toISOString().split('T')[0], // YYYY-MM-DD format
+      transaction.paymentMethod.name,
+      transaction.store || '',
+      transaction.purpose || '',
+      transaction.type === 'INCOME' ? '収入' : '支出',
+      transaction.amount.toString()
+    ];
+    
+    // 現金取引額と残高
+    const cashTransactionAmount = transaction.transactionImpact?.cashAmount || '';
+    const cashBalance = transaction.historicalBalance?.cash || 0;
+    const cashData = [
+      cashTransactionAmount === '' ? '' : cashTransactionAmount.toString(),
+      cashBalance.toString()
+    ];
+    
+    // 銀行別取引額と残高
+    const bankData = banks.flatMap(bank => {
+      const bankTransaction = transaction.transactionImpact?.bankTransactions?.find(t => t.bankId === bank.id);
+      const bankBalance = transaction.historicalBalance?.banks.find(b => b.bankId === bank.id);
+      
+      return [
+        bankTransaction ? bankTransaction.amount.toString() : '',
+        bankBalance ? bankBalance.balance.toString() : '0'
+      ];
+    });
+    
+    return [...baseData, ...cashData, ...bankData];
+  });
 
   // Papa Parse を使ってCSVを生成
   const csvContent = Papa.unparse({
