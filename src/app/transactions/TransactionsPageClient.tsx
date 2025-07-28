@@ -18,7 +18,7 @@ import type {
 import { TransactionService } from '@/lib/transactions-client';
 import { MasterService } from '@/lib/masters-client';
 import { ImportExportService } from '@/lib/import-export-client';
-import { formatDate, debounce } from '@/lib/utils';
+import { formatDate, formatDateForInput, debounce } from '@/lib/utils';
 
 export const TransactionsPageClient: React.FC = () => {
   const { data: session } = useSession();
@@ -257,7 +257,7 @@ export const TransactionsPageClient: React.FC = () => {
           <Input
             label="開始日"
             type="date"
-            value={filter.startDate ? formatDate(filter.startDate) : ''}
+            value={filter.startDate ? formatDateForInput(filter.startDate) : ''}
             onChange={(e) => 
               handleFilterChange('startDate', e.target.value ? new Date(e.target.value) : undefined)
             }
@@ -265,7 +265,7 @@ export const TransactionsPageClient: React.FC = () => {
           <Input
             label="終了日"
             type="date"
-            value={filter.endDate ? formatDate(filter.endDate) : ''}
+            value={filter.endDate ? formatDateForInput(filter.endDate) : ''}
             onChange={(e) => 
               handleFilterChange('endDate', e.target.value ? new Date(e.target.value) : undefined)
             }
@@ -303,7 +303,7 @@ export const TransactionsPageClient: React.FC = () => {
           </h2>
           <TransactionForm
             initialData={editingTransaction ? {
-              date: formatDate(new Date(editingTransaction.date)),
+              date: formatDateForInput(new Date(editingTransaction.date)),
               paymentMethodId: editingTransaction.paymentMethodId,
               store: editingTransaction.store || undefined,
               purpose: editingTransaction.purpose || undefined,
