@@ -23,7 +23,9 @@ export const CardForm: React.FC<CardFormProps> = ({
   const [formData, setFormData] = useState<CardFormData>({
     name: initialData?.name || '',
     type: initialData?.type || 'CREDIT_CARD',
+    closingDay: initialData?.closingDay || 1,
     withdrawalDay: initialData?.withdrawalDay || 1,
+    withdrawalMonthOffset: initialData?.withdrawalMonthOffset || 1,
     withdrawalBankId: initialData?.withdrawalBankId || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
@@ -53,8 +55,16 @@ export const CardForm: React.FC<CardFormProps> = ({
       newErrors.type = 'カード種別を選択してください';
     }
 
+    if (!formData.closingDay || formData.closingDay < 1 || formData.closingDay > 31) {
+      newErrors.closingDay = '締日は1-31の間で入力してください';
+    }
+
     if (!formData.withdrawalDay || formData.withdrawalDay < 1 || formData.withdrawalDay > 31) {
       newErrors.withdrawalDay = '引き落とし日は1-31の間で入力してください';
+    }
+
+    if (!formData.withdrawalMonthOffset || (formData.withdrawalMonthOffset !== 1 && formData.withdrawalMonthOffset !== 2)) {
+      newErrors.withdrawalMonthOffset = '引き落とし月を選択してください';
     }
 
     if (!formData.withdrawalBankId) {
@@ -122,6 +132,32 @@ export const CardForm: React.FC<CardFormProps> = ({
           value={formData.type}
           onChange={(e) => handleInputChange('type', e.target.value as CardFormData['type'])}
           error={errors.type}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="締日"
+          type="number"
+          min="1"
+          max="31"
+          value={formData.closingDay}
+          onChange={(e) => handleInputChange('closingDay', Number(e.target.value))}
+          error={errors.closingDay}
+          placeholder="例: 15"
+          required
+        />
+
+        <Select
+          label="引き落とし月"
+          options={[
+            { value: '1', label: '翌月' },
+            { value: '2', label: '翌々月' },
+          ]}
+          value={formData.withdrawalMonthOffset.toString()}
+          onChange={(e) => handleInputChange('withdrawalMonthOffset', Number(e.target.value))}
+          error={errors.withdrawalMonthOffset}
           required
         />
       </div>

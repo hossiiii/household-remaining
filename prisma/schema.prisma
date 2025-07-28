@@ -132,15 +132,17 @@ model PaymentMethod {
 }
 
 model Card {
-  id                 String   @id @default(cuid())
-  userId             String   @map("user_id")
-  name               String
-  type               CardType
-  withdrawalDay      Int      @map("withdrawal_day") // 1-31
-  withdrawalBankId   String   @map("withdrawal_bank_id")
-  isActive           Boolean  @default(true) @map("is_active")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                    String   @id @default(cuid())
+  userId                String   @map("user_id")
+  name                  String
+  type                  CardType
+  closingDay            Int      @default(1) @map("closing_day")           // 1-31
+  withdrawalDay         Int      @map("withdrawal_day")                    // 1-31  
+  withdrawalMonthOffset Int      @default(1) @map("withdrawal_month_offset") // 1: 翌月, 2: 翌々月
+  withdrawalBankId      String   @map("withdrawal_bank_id")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   withdrawalBank Bank            @relation("CardWithdrawalBank", fields: [withdrawalBankId], references: [id])
