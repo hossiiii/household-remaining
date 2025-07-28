@@ -6,8 +6,10 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 
 - **ユーザー認証**: メール・パスワードによるログイン/登録機能
 - **取引管理**: 収入・支出の記録、編集、削除、フィルタリング
+- **残高管理**: 現金・銀行口座残高の追跡、自動更新、手動調整
 - **マスタデータ管理**: 支払い方法、カード情報、銀行情報の設定
 - **ダッシュボード**: 収支の統計情報表示、最近の取引一覧
+- **CSVインポート・エクスポート**: 取引データの一括エクスポート・インポート機能
 - **レスポンシブデザイン**: PCとモバイルデバイスに対応
 - **データベースシード**: 初期データの投入機能
 
@@ -29,6 +31,7 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 ### バリデーション・ユーティリティ
 - **Zod**: スキーマ検証
 - **React Hook Form**: フォーム管理（フォームコンポーネント内で使用）
+- **PapaParse**: CSVファイルのパース・生成
 
 ## プロジェクト構成
 
@@ -39,29 +42,42 @@ Next.js 14 + Auth.js v5 + Prisma + PostgreSQLを使用した家計簿管理Web�
 ├── src/
 │   ├── app/                  # Next.js App Router
 │   │   ├── api/             # APIルート
+│   │   │   ├── auth/        # 認証API
+│   │   │   ├── transactions/ # 取引API
+│   │   │   ├── masters/     # マスタデータAPI
+│   │   │   ├── balances/    # 残高API
+│   │   │   └── import-export/ # CSV I/O API
 │   │   ├── auth/            # 認証ページ
 │   │   ├── dashboard/       # ダッシュボード
 │   │   ├── transactions/    # 取引管理
-│   │   ├── masters/        # マスタデータ管理
-│   │   ├── layout.tsx      # ルートレイアウト
-│   │   └── page.tsx        # ホームページ
+│   │   ├── balance/         # 残高管理
+│   │   ├── import-export/   # CSV インポート・エクスポート
+│   │   ├── masters/         # マスタデータ管理
+│   │   ├── layout.tsx       # ルートレイアウト
+│   │   └── page.tsx         # ホームページ
 │   ├── components/          # Reactコンポーネント
-│   │   ├── auth/           # 認証関連
-│   │   ├── transactions/   # 取引管理
-│   │   ├── masters/        # マスタデータ
-│   │   ├── layout/         # レイアウト
-│   │   └── ui/             # UIコンポーネント
-│   ├── lib/                # ライブラリ・ユーティリティ
-│   │   ├── auth.ts         # Auth.js設定
-│   │   ├── prisma.ts       # Prismaクライアント
-│   │   ├── validations.ts  # Zodスキーマ
-│   │   ├── utils.ts        # ユーティリティ関数
-│   │   ├── transactions.ts # 取引サービス（サーバー側）
+│   │   ├── auth/            # 認証関連
+│   │   ├── transactions/    # 取引管理
+│   │   ├── balance/         # 残高管理
+│   │   ├── import-export/   # CSV インポート・エクスポート
+│   │   ├── masters/         # マスタデータ
+│   │   ├── layout/          # レイアウト
+│   │   └── ui/              # UIコンポーネント
+│   ├── lib/                 # ライブラリ・ユーティリティ
+│   │   ├── auth.ts          # Auth.js設定
+│   │   ├── prisma.ts        # Prismaクライアント
+│   │   ├── validations.ts   # Zodスキーマ
+│   │   ├── utils.ts         # ユーティリティ関数
+│   │   ├── transactions.ts  # 取引サービス（サーバー側）
 │   │   ├── transactions-client.ts # 取引サービス（クライアント側）
-│   │   ├── masters.ts      # マスタサービス（サーバー側）
+│   │   ├── balance.ts       # 残高サービス（サーバー側）
+│   │   ├── balance-client.ts # 残高サービス（クライアント側）
+│   │   ├── csv-utils.ts     # CSVインポート・エクスポート処理
+│   │   ├── import-export-client.ts # CSV処理サービス（クライアント側）
+│   │   ├── masters.ts       # マスタサービス（サーバー側）
 │   │   └── masters-client.ts # マスタサービス（クライアント側）
-│   ├── types/              # TypeScript型定義
-│   └── middleware.ts       # Next.jsミドルウェア（認証保護）
+│   ├── types/               # TypeScript型定義
+│   └── middleware.ts        # Next.jsミドルウェア（認証保護）
 ├── docker-compose.yml      # PostgreSQL開発環境
 ├── .env.example           # 環境変数テンプレート
 └── package.json           # 依存関係・スクリプト
@@ -147,7 +163,24 @@ npm run dev
 - 日付、支払い方法、種別でフィルタリング可能
 - ページネーション対応
 
-### 4. マスタデータ管理
+### 4. 残高管理
+- `/balance` で現金・銀行口座の残高を管理
+- 残高サマリーで総合的な資産状況を確認
+- 取引登録時に自動で残高が更新
+- 手動で残高を調整可能
+- 既存取引データから残高を再計算する機能
+
+### 5. CSV インポート・エクスポート
+- `/import-export` で取引データの一括処理
+- **エクスポート**: 既存の取引データをCSVファイルで出力
+  - 日付期間、支払い方法、種別でフィルタリング可能
+  - 日本語ヘッダー対応（Excel対応）
+- **インポート**: CSVファイルから取引データを一括登録
+  - 日本語フィールド名対応（日付、支払い方法、店舗、用途、種別、金額）
+  - データ検証機能付き
+  - エラーレポート表示
+
+### 6. マスタデータ管理
 - `/masters` で支払い方法、カード、銀行情報を管理
 - タブ切り替えで各種マスタデータを設定
 
