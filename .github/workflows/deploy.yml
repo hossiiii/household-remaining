@@ -39,6 +39,7 @@ jobs:
           
       - name: Run database migration
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
           echo "Running database migrations..."
