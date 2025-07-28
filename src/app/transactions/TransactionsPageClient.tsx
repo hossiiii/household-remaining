@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { QuickBalanceSummary } from '@/components/transactions/QuickBalanceSummary';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -175,6 +176,9 @@ export const TransactionsPageClient: React.FC = () => {
           新規取引
         </Button>
       </div>
+
+      {/* 残高サマリー */}
+      <QuickBalanceSummary className="mb-6" />
 
       <div className="bg-white p-4 rounded-lg shadow mb-6">
         <h2 className="text-lg font-medium mb-4">検索・フィルター</h2>
