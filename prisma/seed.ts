@@ -17,13 +17,15 @@ function randomAmount(min: number, max: number): number {
 async function main() {
   console.log('🌱 シーダー開始...');
 
+  // 既存データをクリア（CASCADEで依存関係も自動削除）
+  console.log('🧹 既存データをクリア中...');
+  await prisma.$executeRaw`TRUNCATE TABLE users CASCADE;`;
+
   // テストユーザーの作成
   const hashedPassword = await bcrypt.hash('password123', 12);
   
-  const user = await prisma.user.upsert({
-    where: { email: 'test@example.com' },
-    update: {},
-    create: {
+  const user = await prisma.user.create({
+    data: {
       name: '田中太郎',
       email: 'test@example.com',
       password: hashedPassword,
