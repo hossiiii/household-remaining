@@ -1,15 +1,12 @@
-name: Deploy to Production
+name: Preview Deploy
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [closed]
+    branches-ignore:
+      - main
 
 jobs:
-  deploy:
-    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
+  preview:
     runs-on: ubuntu-latest
     
     steps:
@@ -32,55 +29,49 @@ jobs:
 
       - name: Test database connection
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
         run: |
-          echo "Testing connection with pooled URL..."
-          npx prisma db execute --stdin <<< "SELECT 1" || echo "Pooled connection failed"
+          echo "Testing connection with preview database..."
+          npx prisma db execute --stdin <<< "SELECT 1" || echo "Preview database connection failed"
           
       - name: Run database migration
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
         run: |
-          echo "Running migrations via pgbouncer..."
+          echo "Running migrations on preview database..."
           echo "Checking migration status..."
           npx prisma migrate status || true
           echo "Deploying migrations..."
           npx prisma migrate deploy || echo "Migration failed, but continuing..."
 
-      - name: Run database seed (if needed)
+      - name: Run database seed
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
         run: |
-          # 初回デプロイ時のみシーダーを実行
-          # ユーザーテーブルにデータがあるかチェック
-          USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" | grep -oE '[0-9]+' | head -1 || echo "0")
-          
-          if [ "$USER_COUNT" = "0" ] && [ -f "prisma/seed.ts" ]; then
-            echo "Database is empty. Running seed..."
+          echo "Running seed on preview database..."
+          if [ -f "prisma/seed.ts" ]; then
             npm run db:seed
           else
-            echo "Database already has data or no seed file found. Skipping seed..."
+            echo "No seed file found. Skipping seed..."
           fi
         continue-on-error: true
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel Preview
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          vercel-args: '--preview'
 
       - name: Notify Slack on Success
         if: success() && env.SLACK_WEBHOOK_URL != ''
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          MESSAGE="🚀 プロダクションデプロイが完了しました！\n"
+          MESSAGE="🔍 プレビューデプロイが完了しました！\n"
           MESSAGE+="ブランチ: ${{ github.ref_name }}\n"
-          MESSAGE+="コミット: ${{ github.sha }}\n"
-          MESSAGE+="Vercel URL: https://household-remaining.vercel.app"
+          MESSAGE+="コミット: ${{ github.sha }}"
           
           curl -X POST -H 'Content-type: application/json' \
           --data "{\"text\":\"$MESSAGE\"}" \
@@ -91,7 +82,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          MESSAGE="❌ プロダクションデプロイが失敗しました。\n"
+          MESSAGE="❌ プレビューデプロイが失敗しました。\n"
           MESSAGE+="ブランチ: ${{ github.ref_name }}\n"
           MESSAGE+="コミット: ${{ github.sha }}\n"
           MESSAGE+="確認してください: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
