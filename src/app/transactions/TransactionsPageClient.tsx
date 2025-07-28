@@ -20,6 +20,7 @@ import type {
 import { TransactionService } from '@/lib/transactions-client';
 import { MasterService } from '@/lib/masters-client';
 import { ImportExportService } from '@/lib/import-export-client';
+import { CardWithdrawalClientService } from '@/lib/card-withdrawal-client';
 import { formatDate, formatDateForInput, debounce } from '@/lib/utils';
 
 export const TransactionsPageClient: React.FC = () => {
@@ -33,6 +34,8 @@ export const TransactionsPageClient: React.FC = () => {
   const [showHistoricalBalance, setShowHistoricalBalance] = useState(false);
   const [showBalanceEditForm, setShowBalanceEditForm] = useState(false);
   const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+  const [cardWithdrawalProcessing, setCardWithdrawalProcessing] = useState(false);
+  const [cardWithdrawalMessage, setCardWithdrawalMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -52,6 +55,7 @@ export const TransactionsPageClient: React.FC = () => {
 
   useEffect(() => {
     if (session?.user?.id) {
+      processOverdueCardTransactions();
       loadTransactions();
       loadPaymentMethods();
     }
@@ -68,6 +72,45 @@ export const TransactionsPageClient: React.FC = () => {
       loadTransactions();
     }
   }, [showHistoricalBalance, session?.user?.id]);
+
+  const processOverdueCardTransactions = async () => {
+    if (!session?.user?.id) return;
+    
+    setCardWithdrawalProcessing(true);
+    setCardWithdrawalMessage(null);
+    
+    try {
+      const result = await CardWithdrawalClientService.processOverdueTransactions();
+      
+      if (result.success && result.data) {
+        const { processedCount, errors } = result.data;
+        
+        if (processedCount > 0) {
+          setCardWithdrawalMessage(`${processedCount}件のカード取引を銀行取引に変換しました`);
+          // 残高更新のため再読み込み
+          setBalanceRefreshKey(prev => prev + 1);
+        }
+        
+        if (errors.length > 0) {
+          console.warn('カード引き落とし処理エラー:', errors);
+          setCardWithdrawalMessage(prev => 
+            prev ? `${prev}（一部エラーあり）` : `処理中にエラーが発生しました`
+          );
+        }
+      } else if (result.error) {
+        console.error('カード引き落とし処理失敗:', result.error);
+      }
+    } catch (error) {
+      console.error('カード引き落とし処理エラー:', error);
+    } finally {
+      setCardWithdrawalProcessing(false);
+      
+      // メッセージを5秒後に消去
+      if (cardWithdrawalMessage) {
+        setTimeout(() => setCardWithdrawalMessage(null), 5000);
+      }
+    }
+  };
 
   const loadTransactions = async () => {
     if (!session?.user?.id) return;
@@ -220,6 +263,52 @@ export const TransactionsPageClient: React.FC = () => {
     setBalanceRefreshKey(prev => prev + 1); // 残高サマリーを再読み込み
   };
 
+  const handleConvertCardTransaction = async (transactionId: string) => {
+    if (!session?.user?.id) return;
+    
+    if (!window.confirm('このカード取引を銀行取引に変換しますか？')) {
+      return;
+    }
+    
+    try {
+      const result = await CardWithdrawalClientService.convertSingleTransaction(transactionId);
+      
+      if (result.success) {
+        alert('カード取引を銀行取引に変換しました');
+        loadTransactions();
+        setBalanceRefreshKey(prev => prev + 1);
+      } else {
+        alert(result.error || 'カード取引の変換に失敗しました');
+      }
+    } catch (error) {
+      console.error('Card conversion error:', error);
+      alert('カード取引の変換中にエラーが発生しました');
+    }
+  };
+
+  const handleRevertCardTransaction = async (transactionId: string) => {
+    if (!session?.user?.id) return;
+    
+    if (!window.confirm('この変換済みカード取引を元に戻しますか？')) {
+      return;
+    }
+    
+    try {
+      const result = await CardWithdrawalClientService.revertTransaction(transactionId);
+      
+      if (result.success) {
+        alert('カード取引を元に戻しました');
+        loadTransactions();
+        setBalanceRefreshKey(prev => prev + 1);
+      } else {
+        alert(result.error || 'カード取引の復元に失敗しました');
+      }
+    } catch (error) {
+      console.error('Card revert error:', error);
+      alert('カード取引の復元中にエラーが発生しました');
+    }
+  };
+
   if (!session) {
     return <div>ログインが必要です</div>;
   }
@@ -265,6 +354,23 @@ export const TransactionsPageClient: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* カード引き落とし処理ステータス */}
+      {cardWithdrawalProcessing && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-sm text-blue-700">
+            📋 期限切れのカード取引を確認中...
+          </div>
+        </div>
+      )}
+      
+      {cardWithdrawalMessage && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="text-sm text-green-700">
+            ✅ {cardWithdrawalMessage}
+          </div>
+        </div>
+      )}
 
       {/* 残高サマリー */}
       <div key={balanceRefreshKey} className="mb-8">
@@ -344,6 +450,8 @@ export const TransactionsPageClient: React.FC = () => {
           transactions={transactions}
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
+          onConvertCard={handleConvertCardTransaction}
+          onRevertCard={handleRevertCardTransaction}
           loading={loading}
           showHistoricalBalance={showHistoricalBalance}
           banks={banks}

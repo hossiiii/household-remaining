@@ -6,11 +6,14 @@ import { BalanceCell } from './BalanceCell';
 import type { TransactionWithPaymentMethod, TransactionWithHistoricalBalance } from '@/types';
 import { TransactionType } from '@prisma/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDateJapanese } from '@/lib/card-utils';
 
 interface TransactionTableProps {
   transactions: any[];
   onEdit?: (transaction: any) => void;
   onDelete?: (id: string) => void;
+  onConvertCard?: (transactionId: string) => void;
+  onRevertCard?: (transactionId: string) => void;
   loading?: boolean;
   showHistoricalBalance?: boolean;
   banks?: { id: string; name: string }[];
@@ -20,6 +23,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   onEdit,
   onDelete,
+  onConvertCard,
+  onRevertCard,
   loading = false,
   showHistoricalBalance = false,
   banks = [],
@@ -85,7 +90,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {transactions.map((transaction) => (
-            <tr key={transaction.id} className="hover:bg-gray-50">
+            <React.Fragment key={transaction.id}>
+              <tr className="hover:bg-gray-50">
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {formatDate(new Date(transaction.date))}
               </td>
@@ -139,7 +145,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 </span>
               </td>
               <td className="px-4 py-3 text-sm text-center border-b">
-                <div className="flex space-x-2 justify-center">
+                <div className="flex space-x-1 justify-center flex-wrap">
                   {onEdit && (
                     <Button
                       size="sm"
@@ -148,6 +154,31 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     >
                       編集
                     </Button>
+                  )}
+                  {/* カード取引の場合の変換/復元ボタン */}
+                  {transaction.paymentMethod.type === 'CARD' && (
+                    <>
+                      {transaction.bankExpense === null && onConvertCard && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => onConvertCard(transaction.id)}
+                          title="銀行取引に変換"
+                        >
+                          変換
+                        </Button>
+                      )}
+                      {transaction.bankExpense !== null && onRevertCard && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onRevertCard(transaction.id)}
+                          title="変換を取り消し"
+                        >
+                          復元
+                        </Button>
+                      )}
+                    </>
                   )}
                   {onDelete && (
                     <Button
@@ -198,7 +229,33 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   })}
                 </>
               )}
-            </tr>
+              </tr>
+              
+              {/* カード取引の場合の引き落とし情報行 */}
+              {transaction.paymentMethod.type === 'CARD' && transaction.cardWithdrawalDate && (
+                <tr className="bg-blue-50 border-t">
+                  <td colSpan={8} className="px-4 py-2 text-xs text-blue-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span>
+                          🏦 引き落とし予定: {formatDateJapanese(new Date(transaction.cardWithdrawalDate))}
+                        </span>
+                        {transaction.bankExpense !== null && (
+                          <span className="inline-flex px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                            ✅ 変換済み
+                          </span>
+                        )}
+                        {transaction.bankExpense === null && new Date(transaction.cardWithdrawalDate) <= new Date() && (
+                          <span className="inline-flex px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                            ⚠️ 期限切れ
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
