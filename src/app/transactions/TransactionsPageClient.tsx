@@ -44,6 +44,11 @@ export const TransactionsPageClient: React.FC = () => {
     hasPrev: false,
   });
 
+  const [sorting, setSorting] = useState({
+    sortBy: 'date',
+    sortOrder: 'asc' as 'asc' | 'desc',
+  });
+
   const [filter, setFilter] = useState<TransactionFilter>({
     type: 'all',
   });
@@ -64,7 +69,7 @@ export const TransactionsPageClient: React.FC = () => {
     if (session?.user?.id) {
       debouncedSearch();
     }
-  }, [filter, session?.user?.id]);
+  }, [filter, sorting, session?.user?.id]);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -134,7 +139,7 @@ export const TransactionsPageClient: React.FC = () => {
         // 履歴残高付きデータを取得
         const result = await TransactionService.getTransactionsWithHistoricalBalance(
           filter,
-          { page: pagination.page, limit: pagination.limit }
+          { page: pagination.page, limit: pagination.limit, sortBy: sorting.sortBy, sortOrder: sorting.sortOrder }
         );
         
         if (result.success && result.data) {
@@ -147,7 +152,7 @@ export const TransactionsPageClient: React.FC = () => {
         // 通常の取引データを取得
         const result = await TransactionService.getTransactions(
           filter,
-          { page: pagination.page, limit: pagination.limit }
+          { page: pagination.page, limit: pagination.limit, sortBy: sorting.sortBy, sortOrder: sorting.sortOrder }
         );
         
         if (result.success && result.data) {
@@ -231,6 +236,11 @@ export const TransactionsPageClient: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    setSorting({ sortBy, sortOrder });
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when sorting changes
   };
 
   const handleExportCSV = async () => {
@@ -400,6 +410,9 @@ export const TransactionsPageClient: React.FC = () => {
           loading={loading}
           showHistoricalBalance={showHistoricalBalance}
           banks={banks}
+          sortBy={sorting.sortBy}
+          sortOrder={sorting.sortOrder}
+          onSort={handleSort}
         />
 
         {pagination.totalPages > 1 && (

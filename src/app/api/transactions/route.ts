@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const sortOrder = (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
     const type = searchParams.get('type') || 'all';
     const paymentMethodId = searchParams.get('paymentMethodId') || undefined;
     const store = searchParams.get('store') || undefined;
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
       const result = await HistoricalBalanceService.getTransactionsWithHistoricalBalance(
         session.user.id,
         filter,
-        { page, limit }
+        { page, limit, sortBy, sortOrder }
       );
 
       if (!result.success) {
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
     const result = await TransactionService.getTransactions(
       session.user.id,
       filter,
-      { page, limit }
+      { page, limit, sortBy, sortOrder }
     );
 
     if (!result.success) {

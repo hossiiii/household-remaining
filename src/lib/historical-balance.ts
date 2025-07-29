@@ -137,6 +137,8 @@ export class HistoricalBalanceService {
     pagination?: {
       page: number;
       limit: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
     }
   ): Promise<APIResponse<{
     transactions: TransactionWithHistoricalBalance[];
@@ -178,7 +180,9 @@ export class HistoricalBalanceService {
             },
           },
         },
-        orderBy: { date: 'desc' },
+        orderBy: {
+          [pagination?.sortBy || 'date']: pagination?.sortOrder || 'asc',
+        },
         skip: pagination ? (pagination.page - 1) * pagination.limit : 0,
         take: pagination?.limit,
       });
