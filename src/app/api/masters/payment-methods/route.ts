@@ -36,7 +36,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = paymentMethodSchema.parse(body);
+    
+    // nullをundefinedに変換（Zodバリデーション用）
+    const preprocessedData = {
+      ...body,
+      cardId: body.cardId === null ? undefined : body.cardId,
+      bankId: body.bankId === null ? undefined : body.bankId,
+    };
+    
+    const validatedData = paymentMethodSchema.parse(preprocessedData);
 
     // undefinedをnullに変換してPrismaスキーマとの互換性を保つ
     const data = {
