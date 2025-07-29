@@ -12,7 +12,7 @@ import type {
 export class TransactionService {
   static async createTransaction(data: TransactionFormData & { userId: string }): Promise<APIResponse<Transaction>> {
     try {
-      const transactionData = {
+      const transactionData: any = {
         userId: data.userId,
         date: new Date(data.date),
         dayOfWeek: new Date(data.date).toLocaleDateString('ja-JP', { weekday: 'short' }),
@@ -26,11 +26,19 @@ export class TransactionService {
       // 支払い方法を取得して残高更新の準備
       const paymentMethod = await prisma.paymentMethod.findUnique({
         where: { id: data.paymentMethodId },
-        include: { bank: true },
+        include: { 
+          bank: true,
+          card: true
+        },
       });
 
       if (!paymentMethod) {
         return { success: false, error: '指定された支払い方法が見つかりません' };
+      }
+
+      // カード取引の場合、引き落とし予定日を計算
+      if (paymentMethod.type === 'CARD' && paymentMethod.card) {
+        transactionData.cardWithdrawalDate = this.calculateWithdrawalDate(new Date(data.date), paymentMethod.card);
       }
 
       const transaction = await prisma.transaction.create({
@@ -227,5 +235,24 @@ export class TransactionService {
     } catch (error) {
       return { success: false, error: '取引の取得に失敗しました' };
     }
+  }
+
+  /**
+   * カード取引の引き落とし予定日を計算
+   */
+  private static calculateWithdrawalDate(transactionDate: Date, card: any): Date {
+    const date = new Date(transactionDate);
+    const closingDate = new Date(date.getFullYear(), date.getMonth(), card.closingDay);
+    
+    let withdrawalDate: Date;
+    if (date >= closingDate) {
+      // 締日以降の取引 → 翌月の締め + オフセット月後の引き落とし
+      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + 1 + card.withdrawalMonthOffset, card.withdrawalDay);
+    } else {
+      // 締日前の取引 → 当月の締め + オフセット月後の引き落とし
+      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset, card.withdrawalDay);
+    }
+
+    return withdrawalDate;
   }
 }

@@ -192,9 +192,11 @@ export class CardWithdrawalService {
       // 締日を過ぎている場合は翌月の引き落とし
       let targetMonth: Date;
       if (transactionDate >= closingDate) {
-        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + card.withdrawalMonthOffset, 1);
+        // 締日以降の取引 → 翌月の締め + オフセット月後の引き落とし
+        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + 1 + card.withdrawalMonthOffset, 1);
       } else {
-        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + card.withdrawalMonthOffset - 1, 1);
+        // 締日前の取引 → 当月の締め + オフセット月後の引き落とし
+        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + card.withdrawalMonthOffset, 1);
       }
 
       const monthKey = `${targetMonth.getFullYear()}-${String(targetMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -217,9 +219,11 @@ export class CardWithdrawalService {
     
     let withdrawalDate: Date;
     if (date >= closingDate) {
-      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset, card.withdrawalDay);
+      // 締日以降の取引 → 翌月の締め + オフセット月後の引き落とし
+      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + 1 + card.withdrawalMonthOffset, card.withdrawalDay);
     } else {
-      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset - 1, card.withdrawalDay);
+      // 締日前の取引 → 当月の締め + オフセット月後の引き落とし
+      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset, card.withdrawalDay);
     }
 
     return withdrawalDate;
