@@ -125,6 +125,14 @@ export class TransactionService {
   ): Promise<APIResponse<{
     transactions: TransactionWithHistoricalBalance[];
     banks: { id: string; name: string }[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
   }>> {
     try {
       const params = new URLSearchParams({
