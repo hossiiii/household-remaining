@@ -72,6 +72,12 @@ export const TransactionsPageClient: React.FC = () => {
     }
   }, [showHistoricalBalance, session?.user?.id]);
 
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadTransactions();
+    }
+  }, [pagination.page, session?.user?.id]);
+
   const processCardWithdrawals = async () => {
     if (!session?.user?.id) return;
 
@@ -132,17 +138,10 @@ export const TransactionsPageClient: React.FC = () => {
         );
         
         if (result.success && result.data) {
-          const { transactions: historicalTransactions, banks: historicalBanks } = result.data;
+          const { transactions: historicalTransactions, banks: historicalBanks, pagination: paginationInfo } = result.data;
           setTransactions(historicalTransactions);
           setBanks(historicalBanks);
-          // Note: Historical balance API doesn't return pagination, so we simulate it
-          setPagination(prev => ({
-            ...prev,
-            total: historicalTransactions.length,
-            totalPages: Math.ceil(historicalTransactions.length / pagination.limit),
-            hasNext: pagination.page * pagination.limit < historicalTransactions.length,
-            hasPrev: pagination.page > 1,
-          }));
+          setPagination(paginationInfo);
         }
       } else {
         // 通常の取引データを取得
@@ -232,7 +231,6 @@ export const TransactionsPageClient: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    loadTransactions();
   };
 
   const handleExportCSV = async () => {

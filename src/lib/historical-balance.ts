@@ -141,6 +141,14 @@ export class HistoricalBalanceService {
   ): Promise<APIResponse<{
     transactions: TransactionWithHistoricalBalance[];
     banks: { id: string; name: string }[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
   }>> {
     try {
       // 通常の取引データを取得
@@ -156,6 +164,9 @@ export class HistoricalBalanceService {
         if (filter.store) whereClause.store = { contains: filter.store };
         if (filter.purpose) whereClause.purpose = { contains: filter.purpose };
       }
+
+      // 総数を取得
+      const total = await prisma.transaction.count({ where: whereClause });
 
       const transactions = await prisma.transaction.findMany({
         where: whereClause,
@@ -223,11 +234,24 @@ export class HistoricalBalanceService {
         });
       }
 
+      // ページネーション情報を計算
+      const page = pagination?.page || 1;
+      const limit = pagination?.limit || 20;
+      const totalPages = Math.ceil(total / limit);
+
       return {
         success: true,
         data: {
           transactions: transactionsWithBalance,
           banks,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+          },
         },
       };
     } catch (error) {
