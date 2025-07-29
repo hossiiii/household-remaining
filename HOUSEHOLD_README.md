@@ -230,3 +230,4 @@ npm run db:studio    # Prisma Studio起動
 3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
 5. プルリクエストを作成
+
