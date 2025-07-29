@@ -173,12 +173,13 @@ export const BalanceEditForm: React.FC<BalanceEditFormProps> = ({
           {/* 金額入力 */}
           <Input
             label="残高"
-            type="number"
-            value={formData.amount}
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]*\.?[0-9]*"
+            value={formData.amount.toString()}
             onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
             error={errors.amount}
             placeholder="0"
-            step="0.01"
             required
           />
 

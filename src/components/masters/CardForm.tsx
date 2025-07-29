@@ -139,11 +139,11 @@ export const CardForm: React.FC<CardFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="締日"
-          type="number"
-          min="1"
-          max="31"
-          value={formData.closingDay}
-          onChange={(e) => handleInputChange('closingDay', Number(e.target.value))}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={formData.closingDay.toString()}
+          onChange={(e) => handleInputChange('closingDay', Number(e.target.value) || 1)}
           error={errors.closingDay}
           placeholder="例: 15"
           required
@@ -165,11 +165,11 @@ export const CardForm: React.FC<CardFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="引き落とし日"
-          type="number"
-          min="1"
-          max="31"
-          value={formData.withdrawalDay}
-          onChange={(e) => handleInputChange('withdrawalDay', Number(e.target.value))}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={formData.withdrawalDay.toString()}
+          onChange={(e) => handleInputChange('withdrawalDay', Number(e.target.value) || 1)}
           error={errors.withdrawalDay}
           placeholder="例: 27"
           required
