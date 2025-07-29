@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       type: validatedData.type,
       cardId: validatedData.cardId || null,
       bankId: validatedData.bankId || null,
+      memo: validatedData.memo || null,
       isActive: validatedData.isActive ?? true,
     };
 

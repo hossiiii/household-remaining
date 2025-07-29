@@ -22,6 +22,7 @@ export const BankForm: React.FC<BankFormProps> = ({
     name: initialData?.name || '',
     branchName: initialData?.branchName || '',
     accountNumber: initialData?.accountNumber || '',
+    memo: initialData?.memo || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
 
@@ -102,6 +103,20 @@ export const BankForm: React.FC<BankFormProps> = ({
         />
 
         <div></div> {/* Empty div for grid spacing */}
+      </div>
+
+      <div>
+        <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-1">
+          メモ（任意）
+        </label>
+        <textarea
+          id="memo"
+          value={formData.memo || ''}
+          onChange={(e) => handleInputChange('memo', e.target.value)}
+          placeholder="例: 給与振込用の口座"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          rows={3}
+        />
       </div>
 
       <div className="flex items-center">

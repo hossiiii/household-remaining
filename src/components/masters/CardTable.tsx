@@ -64,6 +64,9 @@ export const CardTable: React.FC<CardTableProps> = ({
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               引き落とし銀行
             </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              メモ
+            </th>
             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               状態
             </th>
@@ -92,6 +95,9 @@ export const CardTable: React.FC<CardTableProps> = ({
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {card.withdrawalBank.name}
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                {card.memo || '-'}
               </td>
               <td className="px-4 py-3 text-sm text-center border-b">
                 <span

@@ -120,6 +120,7 @@ export interface PaymentMethodFormData {
   type: 'CASH' | 'CARD' | 'BANK';
   cardId?: string;
   bankId?: string;
+  memo?: string;
   isActive?: boolean;
 }
 
@@ -130,6 +131,7 @@ export interface CardFormData {
   withdrawalDay: number;
   withdrawalMonthOffset: number;
   withdrawalBankId: string;
+  memo?: string;
   isActive?: boolean;
 }
 
@@ -137,6 +139,7 @@ export interface BankFormData {
   name: string;
   branchName?: string;
   accountNumber?: string;
+  memo?: string;
   isActive?: boolean;
 }
 

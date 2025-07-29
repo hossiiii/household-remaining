@@ -29,6 +29,7 @@ export async function PUT(
       ...validatedData,
       cardId: validatedData.cardId || null,
       bankId: validatedData.bankId || null,
+      memo: validatedData.memo || null,
     };
 
     const result = await MasterService.updatePaymentMethod(
