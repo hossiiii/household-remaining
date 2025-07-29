@@ -41,6 +41,9 @@ export class TransactionService {
         limit: pagination.limit.toString(),
       });
 
+      if (pagination.sortBy) params.append('sortBy', pagination.sortBy);
+      if (pagination.sortOrder) params.append('sortOrder', pagination.sortOrder);
+
       if (filter.type) params.append('type', filter.type);
       if (filter.paymentMethodId) params.append('paymentMethodId', filter.paymentMethodId);
       if (filter.store) params.append('store', filter.store);
@@ -140,6 +143,9 @@ export class TransactionService {
         limit: pagination.limit.toString(),
         withHistoricalBalance: 'true',
       });
+
+      if (pagination.sortBy) params.append('sortBy', pagination.sortBy);
+      if (pagination.sortOrder) params.append('sortOrder', pagination.sortOrder);
 
       if (filter.type) params.append('type', filter.type);
       if (filter.paymentMethodId) params.append('paymentMethodId', filter.paymentMethodId);

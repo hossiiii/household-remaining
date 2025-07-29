@@ -130,7 +130,7 @@ export class TransactionService {
           },
         },
         orderBy: {
-          date: 'desc',
+          [pagination.sortBy || 'date']: pagination.sortOrder || 'asc',
         },
         skip: (pagination.page - 1) * pagination.limit,
         take: pagination.limit,

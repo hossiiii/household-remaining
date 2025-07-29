@@ -14,6 +14,9 @@ interface TransactionTableProps {
   loading?: boolean;
   showHistoricalBalance?: boolean;
   banks?: { id: string; name: string }[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  onSort?: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -23,7 +26,17 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   loading = false,
   showHistoricalBalance = false,
   banks = [],
+  sortBy = 'date',
+  sortOrder = 'asc',
+  onSort,
 }) => {
+  const handleDateSort = () => {
+    if (!onSort) return;
+    
+    const newSortOrder = sortBy === 'date' && sortOrder === 'asc' ? 'desc' : 'asc';
+    onSort('date', newSortOrder);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -46,7 +59,18 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-              日付
+              <button
+                onClick={handleDateSort}
+                className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
+                disabled={!onSort}
+              >
+                <span>日付</span>
+                {sortBy === 'date' && (
+                  <span className="text-blue-600">
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </button>
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               曜日
