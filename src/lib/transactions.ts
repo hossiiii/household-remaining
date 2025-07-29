@@ -252,9 +252,9 @@ export class TransactionService {
     let withdrawalMonth: number;
 
     if (txDate >= closingDate) {
-      // 締日以降の取引 → withdrawalMonthOffset分後に引き落とし
+      // 締日以降の取引 → 翌月 + withdrawalMonthOffset分後に引き落とし
       withdrawalYear = txYear;
-      withdrawalMonth = txMonth + card.withdrawalMonthOffset;
+      withdrawalMonth = txMonth + 1 + card.withdrawalMonthOffset;
     } else {
       // 締日前の取引 → (withdrawalMonthOffset - 1)分後に引き落とし
       withdrawalYear = txYear;
