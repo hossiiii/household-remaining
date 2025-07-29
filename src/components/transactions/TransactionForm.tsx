@@ -97,25 +97,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
 
-  const paymentMethodOptions = paymentMethods.map(method => {
-    let typeLabel = '';
-    switch (method.type) {
-      case 'CASH':
-        typeLabel = '[現金]';
-        break;
-      case 'CARD':
-        typeLabel = '[カード]';
-        break;
-      case 'BANK':
-        typeLabel = '[銀行]';
-        break;
-    }
-    
-    return {
-      value: method.id,
-      label: `${typeLabel} ${method.name}`,
-    };
-  });
+  const paymentMethodOptions = paymentMethods.map(method => ({
+    value: method.id,
+    label: method.name,
+  }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
