@@ -113,6 +113,9 @@ export const TransactionsPageClient: React.FC = () => {
     } catch (error) {
       console.error('Card withdrawal processing error:', error);
       showToast('引き落とし処理中にエラーが発生しました', 'error');
+    } finally {
+      // 処理完了後、取引一覧を更新
+      loadTransactions();
     }
   };
 
