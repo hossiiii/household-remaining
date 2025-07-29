@@ -64,13 +64,11 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof PaymentMethodFormData, string>> = {};
 
-    if (sourceType === 'cash') {
-      if (!formData.name.trim()) {
-        newErrors.name = '支払い方法名を入力してください';
-      } else if (formData.name.trim() !== '現金') {
-        newErrors.name = '現金の場合は「現金」と入力してください';
-      }
-    } else if (sourceType === 'card') {
+    if (!formData.name.trim()) {
+      newErrors.name = '支払い方法名を入力してください';
+    }
+
+    if (sourceType === 'card') {
       if (!formData.cardId) {
         newErrors.cardId = 'カードを選択してください';
       }
@@ -95,22 +93,20 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
     
     if (sourceType === 'cash') {
       submitData = {
-        name: '現金',
+        name: formData.name,
         type: 'CASH',
         isActive: formData.isActive,
       };
     } else if (sourceType === 'card') {
-      const selectedCard = cards.find(c => c.id === formData.cardId);
       submitData = {
-        name: selectedCard?.name || '',
+        name: formData.name,
         type: 'CARD',
         cardId: formData.cardId,
         isActive: formData.isActive,
       };
     } else {
-      const selectedBank = banks.find(b => b.id === formData.bankId);
       submitData = {
-        name: selectedBank?.name || '',
+        name: formData.name,
         type: 'BANK',
         bankId: formData.bankId,
         isActive: formData.isActive,
@@ -130,7 +126,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
     // フォームデータをリセット
     setFormData(prev => ({
       ...prev,
-      name: newType === 'cash' ? '現金' : '',
+      name: '',
       type: newType === 'cash' ? 'CASH' : newType === 'card' ? 'CARD' : 'BANK',
       cardId: '',
       bankId: '',
@@ -141,10 +137,30 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
   };
 
   const handleInputChange = (field: keyof PaymentMethodFormData, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value,
+      };
+
+      // カード選択時にデフォルト名を設定
+      if (field === 'cardId' && typeof value === 'string' && value) {
+        const selectedCard = cards.find(c => c.id === value);
+        if (selectedCard && !prev.name) {
+          newData.name = selectedCard.name;
+        }
+      }
+
+      // 銀行選択時にデフォルト名を設定
+      if (field === 'bankId' && typeof value === 'string' && value) {
+        const selectedBank = banks.find(b => b.id === value);
+        if (selectedBank && !prev.name) {
+          newData.name = selectedBank.name;
+        }
+      }
+
+      return newData;
+    });
 
     if (errors[field as keyof typeof errors]) {
       setErrors(prev => ({
@@ -209,18 +225,6 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
       </div>
 
       {/* 条件に応じた入力フィールド */}
-      {sourceType === 'cash' && (
-        <Input
-          label="支払い方法名"
-          type="text"
-          value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          error={errors.name}
-          placeholder="現金"
-          required
-        />
-      )}
-
       {sourceType === 'card' && (
         <div>
           {cardOptions.length > 0 ? (
@@ -264,6 +268,30 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
           )}
         </div>
       )}
+
+      {/* 支払い方法名（全ての種類で表示） */}
+      <Input
+        label="支払い方法名"
+        type="text"
+        value={formData.name}
+        onChange={(e) => handleInputChange('name', e.target.value)}
+        error={errors.name}
+        placeholder={
+          sourceType === 'cash' 
+            ? "例: 小遣い用現金、生活用現金" 
+            : sourceType === 'card' 
+            ? "例: 楽天カード（生活費用）" 
+            : "例: みずほ銀行（生活費用）"
+        }
+        required
+        helperText={
+          sourceType === 'card' && formData.cardId
+            ? "選択したカードの名前がデフォルトで設定されますが、変更できます"
+            : sourceType === 'bank' && formData.bankId
+            ? "選択した銀行の名前がデフォルトで設定されますが、変更できます"
+            : undefined
+        }
+      />
 
       {/* 有効フラグ */}
       <div className="flex items-center">

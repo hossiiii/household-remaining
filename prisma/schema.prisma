@@ -131,8 +131,6 @@ model PaymentMethod {
   transactions Transaction[]
 
   @@unique([userId, name])
-  @@unique([userId, cardId])
-  @@unique([userId, bankId])
   @@map("payment_methods")
 }
 

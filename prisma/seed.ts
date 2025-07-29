@@ -107,53 +107,95 @@ async function main() {
   console.log('💰 支払い方法作成中...');
   const paymentMethods: any[] = [];
 
-  // 現金の作成
-  const cashPaymentMethod = await prisma.paymentMethod.upsert({
-    where: {
-      userId_name: {
-        userId: user.id,
-        name: '現金',
-      },
-    },
-    update: {},
-    create: {
-      userId: user.id,
-      name: '現金',
-      type: 'CASH',
-    },
-  });
-  paymentMethods.push(cashPaymentMethod);
-  console.log('  ✓ 現金 作成完了');
-  await wait(200); // 0.2秒待機
+  // 現金の複数作成
+  const cashTypes = [
+    { name: '生活用現金', purpose: '日常生活費' },
+    { name: '小遣い用現金', purpose: '個人的な支出' },
+    { name: '緊急用現金', purpose: '緊急時の備え' },
+  ];
 
-  // カード系支払い方法の作成
-  for (const card of cards) {
-    const cardPaymentMethod = await prisma.paymentMethod.create({
-      data: {
+  for (const cashType of cashTypes) {
+    const cashPaymentMethod = await prisma.paymentMethod.upsert({
+      where: {
+        userId_name: {
+          userId: user.id,
+          name: cashType.name,
+        },
+      },
+      update: {},
+      create: {
         userId: user.id,
-        name: card.name,
-        type: 'CARD',
-        cardId: card.id,
+        name: cashType.name,
+        type: 'CASH',
       },
     });
-    paymentMethods.push(cardPaymentMethod);
-    console.log(`  ✓ ${card.name} 作成完了`);
+    paymentMethods.push(cashPaymentMethod);
+    console.log(`  ✓ ${cashType.name} 作成完了`);
     await wait(200); // 0.2秒待機
   }
 
-  // 銀行系支払い方法の作成
+  // カード系支払い方法の作成（複数パターン）
+  for (const card of cards) {
+    // カードごとに複数の用途別支払い方法を作成
+    const cardPatterns = card.name.includes('楽天カード') 
+      ? [
+          { suffix: '（生活費用）', purpose: '生活費' },
+          { suffix: '（ネットショッピング）', purpose: 'ネット購入' },
+        ]
+      : card.name.includes('メインクレジットカード')
+      ? [
+          { suffix: '（メイン）', purpose: 'メイン利用' },
+          { suffix: '（固定費）', purpose: '固定費支払い' },
+        ]
+      : [
+          { suffix: '', purpose: '一般利用' }, // その他のカードはデフォルト1つのみ
+        ];
+
+    for (const pattern of cardPatterns) {
+      const cardPaymentMethod = await prisma.paymentMethod.create({
+        data: {
+          userId: user.id,
+          name: `${card.name}${pattern.suffix}`,
+          type: 'CARD',
+          cardId: card.id,
+        },
+      });
+      paymentMethods.push(cardPaymentMethod);
+      console.log(`  ✓ ${card.name}${pattern.suffix} 作成完了`);
+      await wait(200); // 0.2秒待機
+    }
+  }
+
+  // 銀行系支払い方法の作成（複数パターン）
   for (const bank of banks) {
-    const bankPaymentMethod = await prisma.paymentMethod.create({
-      data: {
-        userId: user.id,
-        name: bank.name,
-        type: 'BANK',
-        bankId: bank.id,
-      },
-    });
-    paymentMethods.push(bankPaymentMethod);
-    console.log(`  ✓ ${bank.name} 作成完了`);
-    await wait(200); // 0.2秒待機
+    // 銀行ごとに複数の用途別支払い方法を作成
+    const bankPatterns = bank.name.includes('みずほ銀行')
+      ? [
+          { suffix: '（給与口座）', purpose: '給与受取・生活費' },
+          { suffix: '（貯金用）', purpose: '貯金' },
+        ]
+      : bank.name.includes('ゆうちょ銀行')
+      ? [
+          { suffix: '（生活費）', purpose: '生活費' },
+          { suffix: '（積立）', purpose: '積立貯金' },
+        ]
+      : [
+          { suffix: '', purpose: '一般利用' }, // その他の銀行はデフォルト1つのみ
+        ];
+
+    for (const pattern of bankPatterns) {
+      const bankPaymentMethod = await prisma.paymentMethod.create({
+        data: {
+          userId: user.id,
+          name: `${bank.name}${pattern.suffix}`,
+          type: 'BANK',
+          bankId: bank.id,
+        },
+      });
+      paymentMethods.push(bankPaymentMethod);
+      console.log(`  ✓ ${bank.name}${pattern.suffix} 作成完了`);
+      await wait(200); // 0.2秒待機
+    }
   }
 
   console.log(`✅ 支払い方法作成完了: ${paymentMethods.length}件`);
@@ -173,37 +215,37 @@ async function main() {
 
   // 各銀行の初期残高を設定（マイナスを避けるため十分な金額）
   const initialBalances = [
-    { date: new Date('2024-09-30'), amount: 200000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 5 }, // みずほ銀行
-    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 6 }, // 三菱UFJ銀行
-    { date: new Date('2024-09-30'), amount: 100000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 7 }, // 三井住友銀行
-    { date: new Date('2024-09-30'), amount: 80000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 8 }, // ゆうちょ銀行
+    { date: new Date('2024-09-30'), amount: 200000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 10 }, // みずほ銀行（給与口座）
+    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 12 }, // 三菱UFJ銀行
+    { date: new Date('2024-09-30'), amount: 100000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 13 }, // 三井住友銀行
+    { date: new Date('2024-09-30'), amount: 80000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 14 }, // ゆうちょ銀行（生活費）
+    { date: new Date('2024-09-30'), amount: 300000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 11 }, // みずほ銀行（貯金用）
+    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 15 }, // ゆうちょ銀行（積立）
   ];
 
   // 現金の初期残高
-  const cashInitialBalance = {
-    date: new Date('2024-09-30'), 
-    amount: 50000, 
-    purpose: 'この時点の残高', 
-    store: null, 
-    paymentMethodIndex: 0 // 現金
-  };
+  const cashInitialBalances = [
+    { date: new Date('2024-09-30'), amount: 30000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 0 }, // 生活用現金
+    { date: new Date('2024-09-30'), amount: 20000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 1 }, // 小遣い用現金
+    { date: new Date('2024-09-30'), amount: 50000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 2 }, // 緊急用現金
+  ];
 
   // 収入データ（銀行口座への入金のみ - 給与は必ず銀行振込）
   const incomeData = [
-    { date: new Date('2024-10-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 5 }, // みずほ銀行
-    { date: new Date('2024-11-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 5 },
-    { date: new Date('2024-12-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 5 },
-    { date: new Date('2024-11-15'), amount: 50000, purpose: '副業収入', store: null, paymentMethodIndex: 6 }, // 三菱UFJ銀行
-    { date: new Date('2024-12-15'), amount: 75000, purpose: '副業収入', store: null, paymentMethodIndex: 6 },
-    { date: new Date('2024-12-31'), amount: 100000, purpose: 'ボーナス', store: null, paymentMethodIndex: 7 }, // 三井住友銀行
+    { date: new Date('2024-10-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 }, // みずほ銀行（給与口座）
+    { date: new Date('2024-11-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 },
+    { date: new Date('2024-12-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 },
+    { date: new Date('2024-11-15'), amount: 50000, purpose: '副業収入', store: null, paymentMethodIndex: 12 }, // 三菱UFJ銀行
+    { date: new Date('2024-12-15'), amount: 75000, purpose: '副業収入', store: null, paymentMethodIndex: 12 },
+    { date: new Date('2024-12-31'), amount: 100000, purpose: 'ボーナス', store: null, paymentMethodIndex: 13 }, // 三井住友銀行
   ];
 
   // カード返金データ（返金・キャンセル等）
   const cardRefundData = [
-    { date: new Date('2024-11-03'), amount: 2580, purpose: '商品返品', store: 'Amazon', paymentMethodIndex: 4 }, // Amazonプリペイドカード
-    { date: new Date('2024-11-18'), amount: 1200, purpose: 'キャンセル返金', store: 'スタバ', paymentMethodIndex: 1 }, // メインクレジットカード
-    { date: new Date('2024-12-05'), amount: 5400, purpose: '過剰請求返金', store: 'イオン', paymentMethodIndex: 3 }, // イオンカード
-    { date: new Date('2024-12-22'), amount: 890, purpose: 'ポイント還元', store: '楽天', paymentMethodIndex: 2 }, // 楽天カード
+    { date: new Date('2024-11-03'), amount: 2580, purpose: '商品返品', store: 'Amazon', paymentMethodIndex: 8 }, // Amazonプリペイドカード
+    { date: new Date('2024-11-18'), amount: 1200, purpose: 'キャンセル返金', store: 'スタバ', paymentMethodIndex: 3 }, // メインクレジットカード（メイン）
+    { date: new Date('2024-12-05'), amount: 5400, purpose: '過剰請求返金', store: 'イオン', paymentMethodIndex: 7 }, // イオンカード
+    { date: new Date('2024-12-22'), amount: 890, purpose: 'ポイント還元', store: '楽天', paymentMethodIndex: 6 }, // 楽天カード（ネットショッピング）
   ];
 
   // 支出データ（様々なパターン）- 残高がマイナスにならないよう頻度を調整
@@ -239,14 +281,29 @@ async function main() {
         const purpose = pattern.purposes[Math.floor(Math.random() * pattern.purposes.length)];
         const amount = randomAmount(pattern.amountRange[0], pattern.amountRange[1]);
         
-        // 支払い方法をランダムに選択（現金の使用を制限）
+        // 支払い方法をランダムに選択（用途に応じて選択）
         let paymentMethodIndex: number;
-        if (amount < 500) {
-          paymentMethodIndex = Math.random() < 0.6 ? 0 : Math.floor(Math.random() * 6) + 1; // 少額でもカード多め
-        } else if (amount < 2000) {
-          paymentMethodIndex = Math.random() < 0.8 ? Math.floor(Math.random() * 6) + 1 : 0; // カード・銀行多め
+        
+        if (purpose.includes('食材') || purpose.includes('日用品')) {
+          // 食材・日用品は生活用現金または生活費用カード
+          paymentMethodIndex = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 5 : 14; // 生活用現金、楽天カード（生活費用）、ゆうちょ銀行（生活費）
+        } else if (purpose.includes('外食') || purpose.includes('飲食')) {
+          // 外食は小遣い用現金または個人用カード
+          paymentMethodIndex = Math.random() < 0.4 ? 1 : Math.random() < 0.7 ? 3 : 9; // 小遣い用現金、メインクレジット（メイン）、PayPayカード
+        } else if (purpose.includes('ネット購入')) {
+          // ネット購入は専用カード
+          paymentMethodIndex = Math.random() < 0.6 ? 6 : 8; // 楽天カード（ネットショッピング）、Amazonプリペイド
+        } else if (purpose.includes('電気代') || purpose.includes('ガス代') || purpose.includes('携帯代')) {
+          // 固定費は固定費用カードまたは給与口座
+          paymentMethodIndex = Math.random() < 0.6 ? 4 : 10; // メインクレジット（固定費）、みずほ銀行（給与口座）
+        } else if (amount >= 10000) {
+          // 高額はカードまたは銀行
+          const highAmountOptions = [3, 4, 5, 6, 10, 12, 13]; // 各種カード・銀行
+          paymentMethodIndex = highAmountOptions[Math.floor(Math.random() * highAmountOptions.length)];
         } else {
-          paymentMethodIndex = Math.floor(Math.random() * 6) + 1; // カードまたは銀行のみ
+          // その他は全体からランダム（緊急用現金と貯金用口座を除く）
+          const generalOptions = [0, 1, 3, 5, 7, 9, 12, 14]; // 緊急用と貯金用を除く
+          paymentMethodIndex = generalOptions[Math.floor(Math.random() * generalOptions.length)];
         }
 
         transactionData.push({
@@ -277,14 +334,16 @@ async function main() {
   });
 
   // 現金の初期残高を追加
-  transactionData.push({
-    date: cashInitialBalance.date,
-    dayOfWeek: getDayOfWeek(cashInitialBalance.date),
-    paymentMethodId: paymentMethods[cashInitialBalance.paymentMethodIndex].id,
-    store: cashInitialBalance.store,
-    purpose: cashInitialBalance.purpose,
-    type: 'INCOME',
-    amount: cashInitialBalance.amount,
+  cashInitialBalances.forEach(balance => {
+    transactionData.push({
+      date: balance.date,
+      dayOfWeek: getDayOfWeek(balance.date),
+      paymentMethodId: paymentMethods[balance.paymentMethodIndex].id,
+      store: balance.store,
+      purpose: balance.purpose,
+      type: 'INCOME',
+      amount: balance.amount,
+    });
   });
 
   // 収入データを追加
