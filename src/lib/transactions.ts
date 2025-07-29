@@ -12,7 +12,7 @@ import type {
 export class TransactionService {
   static async createTransaction(data: TransactionFormData & { userId: string }): Promise<APIResponse<Transaction>> {
     try {
-      const transactionData = {
+      const transactionData: any = {
         userId: data.userId,
         date: new Date(data.date),
         dayOfWeek: new Date(data.date).toLocaleDateString('ja-JP', { weekday: 'short' }),
@@ -26,11 +26,20 @@ export class TransactionService {
       // 支払い方法を取得して残高更新の準備
       const paymentMethod = await prisma.paymentMethod.findUnique({
         where: { id: data.paymentMethodId },
-        include: { bank: true },
+        include: { 
+          bank: true,
+          card: true,
+        },
       });
 
       if (!paymentMethod) {
         return { success: false, error: '指定された支払い方法が見つかりません' };
+      }
+
+      // カード取引の場合、引き落とし予定日を計算
+      if (paymentMethod.type === 'CARD' && paymentMethod.card) {
+        const withdrawalDate = this.calculateWithdrawalDate(new Date(data.date), paymentMethod.card);
+        transactionData.cardWithdrawalDate = withdrawalDate;
       }
 
       const transaction = await prisma.transaction.create({
@@ -227,5 +236,49 @@ export class TransactionService {
     } catch (error) {
       return { success: false, error: '取引の取得に失敗しました' };
     }
+  }
+
+  // カード取引の引き落とし予定日を計算
+  private static calculateWithdrawalDate(transactionDate: Date, card: any): Date {
+    const txDate = new Date(transactionDate);
+    const txYear = txDate.getFullYear();
+    const txMonth = txDate.getMonth(); // 0-11
+    const txDay = txDate.getDate();
+
+    // 当月の締日
+    const closingDate = new Date(txYear, txMonth, card.closingDay);
+
+    let withdrawalYear: number;
+    let withdrawalMonth: number;
+
+    if (txDate >= closingDate) {
+      // 締日以降の取引 → withdrawalMonthOffset分後に引き落とし
+      withdrawalYear = txYear;
+      withdrawalMonth = txMonth + card.withdrawalMonthOffset;
+    } else {
+      // 締日前の取引 → (withdrawalMonthOffset - 1)分後に引き落とし
+      withdrawalYear = txYear;
+      withdrawalMonth = txMonth + card.withdrawalMonthOffset - 1;
+    }
+
+    // 月の調整（12月を超えた場合の年跨ぎ処理）
+    while (withdrawalMonth > 11) {
+      withdrawalMonth -= 12;
+      withdrawalYear += 1;
+    }
+    while (withdrawalMonth < 0) {
+      withdrawalMonth += 12;
+      withdrawalYear -= 1;
+    }
+
+    // 引き落とし予定日を作成
+    const withdrawalDate = new Date(withdrawalYear, withdrawalMonth, card.withdrawalDay);
+
+    // 該当月に指定日が存在しない場合（例：2月31日など）、月末に調整
+    if (withdrawalDate.getMonth() !== withdrawalMonth) {
+      withdrawalDate.setDate(0); // 前月の最終日
+    }
+
+    return withdrawalDate;
   }
 }

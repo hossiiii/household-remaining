@@ -91,6 +91,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               金額
             </th>
             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              引落予定日
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               操作
             </th>
             {showHistoricalBalance && (
@@ -156,6 +159,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   {transaction.type === TransactionType.INCOME ? '+' : '-'}
                   {formatCurrency(Number(transaction.amount))}
                 </span>
+              </td>
+              <td className="px-4 py-3 text-sm text-center border-b">
+                {transaction.paymentMethod.type === 'CARD' && transaction.cardWithdrawalDate ? (
+                  <span className="text-blue-600 font-medium">
+                    {formatDate(new Date(transaction.cardWithdrawalDate))}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-center border-b">
                 <div className="flex space-x-2 justify-center">
