@@ -25,8 +25,8 @@ describe('/api/masters/banks', () => {
     branchName: '本店',
     isActive: true,
     userId: mockUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: '2025-07-28T23:55:27.119Z',
+    updatedAt: '2025-07-28T23:55:27.119Z',
   };
 
   beforeEach(() => {
@@ -129,6 +129,8 @@ describe('/api/masters/banks', () => {
         ...mockBank,
         accountNumber: null,
         branchName: null,
+        createdAt: '2025-07-28T23:55:27.119Z',
+        updatedAt: '2025-07-28T23:55:27.119Z',
       };
       mockMasterService.createBank = jest.fn().mockResolvedValue({
         success: true,

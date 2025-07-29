@@ -41,7 +41,8 @@
       "mcp__playwright__browser_tab_close",
       "mcp__playwright__browser_network_requests",
       "mcp__playwright__browser_evaluate",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(ping:*)"
     ],
     "deny": []
   },

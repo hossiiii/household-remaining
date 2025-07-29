@@ -9,6 +9,7 @@ import { BalanceEditForm } from '@/components/balance/BalanceEditForm';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { useToast } from '@/components/ui/Toast';
 import type { 
   TransactionWithPaymentMethod, 
   TransactionWithHistoricalBalance,
@@ -24,6 +25,7 @@ import { formatDate, formatDateForInput, debounce } from '@/lib/utils';
 
 export const TransactionsPageClient: React.FC = () => {
   const { data: session } = useSession();
+  const { showToast, ToastContainer } = useToast();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
@@ -52,6 +54,7 @@ export const TransactionsPageClient: React.FC = () => {
 
   useEffect(() => {
     if (session?.user?.id) {
+      processCardWithdrawals();
       loadTransactions();
       loadPaymentMethods();
     }
@@ -68,6 +71,50 @@ export const TransactionsPageClient: React.FC = () => {
       loadTransactions();
     }
   }, [showHistoricalBalance, session?.user?.id]);
+
+  const processCardWithdrawals = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      showToast('カード引き落とし処理を実行中...', 'info', 2000);
+      
+      const response = await fetch('/api/card-withdrawals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const { processedWithdrawals, updatedWithdrawals, errors } = result.data;
+        
+        if (processedWithdrawals > 0 || updatedWithdrawals > 0) {
+          let message = '';
+          if (processedWithdrawals > 0) {
+            message += `新規引き落とし: ${processedWithdrawals}件`;
+          }
+          if (updatedWithdrawals > 0) {
+            if (message) message += ', ';
+            message += `更新: ${updatedWithdrawals}件`;
+          }
+          showToast(`引き落とし処理完了 (${message})`, 'success');
+        }
+
+        if (errors.length > 0) {
+          errors.forEach((error: string) => showToast(error, 'warning'));
+        }
+      } else {
+        if (result.error) {
+          showToast(`引き落とし処理エラー: ${result.error}`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Card withdrawal processing error:', error);
+      showToast('引き落とし処理中にエラーが発生しました', 'error');
+    }
+  };
 
   const loadTransactions = async () => {
     if (!session?.user?.id) return;
@@ -387,6 +434,9 @@ export const TransactionsPageClient: React.FC = () => {
           onCancel={() => setShowBalanceEditForm(false)}
         />
       )}
+
+      {/* トースト通知 */}
+      <ToastContainer />
     </div>
   );
 };

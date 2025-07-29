@@ -28,8 +28,8 @@ describe('/api/masters/cards', () => {
     withdrawalBankId: 'bank-1',
     isActive: true,
     userId: mockUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: '2025-07-28T23:55:58.136Z',
+    updatedAt: '2025-07-28T23:55:58.136Z',
   };
 
   beforeEach(() => {

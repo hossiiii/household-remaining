@@ -9,22 +9,18 @@ jest.mock('next/router', () => require('next-router-mock'));
 // Mock Next.js navigation
 jest.mock('next/navigation', () => require('next-router-mock'));
 
-// Mock next-auth
-jest.mock('next-auth', () => ({
-  __esModule: true,
-  default: jest.fn(() => Promise.resolve(null)),
+// Mock our auth module
+jest.mock('@/lib/auth', () => ({
+  auth: jest.fn(() => Promise.resolve({
+    user: {
+      id: 'test-user-id',
+      name: 'Test User',
+      email: 'test@example.com'
+    }
+  })),
+  authOptions: {},
 }));
 
-// Mock next-auth/providers
-jest.mock('next-auth/providers/credentials', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
-
-// Mock @auth/prisma-adapter
-jest.mock('@auth/prisma-adapter', () => ({
-  PrismaAdapter: jest.fn(),
-}));
 
 // Environment variables for testing
 process.env.NODE_ENV = 'test';

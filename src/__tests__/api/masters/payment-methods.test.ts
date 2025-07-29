@@ -26,14 +26,13 @@ describe('/api/masters/payment-methods', () => {
     bankId: null,
     isActive: true,
     userId: mockUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: '2025-07-28T23:51:16.715Z',
+    updatedAt: '2025-07-28T23:51:16.715Z',
     card: {
       id: 'card-1',
       name: 'テストカード',
       type: 'CREDIT_CARD' as const,
     },
-    bank: undefined,
   };
 
   beforeEach(() => {
@@ -132,7 +131,6 @@ describe('/api/masters/payment-methods', () => {
       name: 'テスト支払い方法',
       type: 'CARD' as const,
       cardId: 'card-1',
-      bankId: null,
       isActive: true,
     };
 
@@ -158,7 +156,7 @@ describe('/api/masters/payment-methods', () => {
         name: validPaymentMethodData.name,
         type: validPaymentMethodData.type,
         cardId: validPaymentMethodData.cardId,
-        bankId: validPaymentMethodData.bankId,
+        bankId: null,
         isActive: validPaymentMethodData.isActive,
       });
     });
@@ -170,8 +168,6 @@ describe('/api/masters/payment-methods', () => {
         type: 'CASH' as const,
         cardId: null,
         bankId: null,
-        card: undefined,
-        bank: undefined,
       };
       mockMasterService.createPaymentMethod = jest.fn().mockResolvedValue({
         success: true,
@@ -204,7 +200,6 @@ describe('/api/masters/payment-methods', () => {
         type: 'BANK' as const,
         cardId: null,
         bankId: 'bank-1',
-        card: undefined,
         bank: { id: 'bank-1', name: 'テスト銀行' },
       };
       mockMasterService.createPaymentMethod = jest.fn().mockResolvedValue({
