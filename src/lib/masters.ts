@@ -187,70 +187,28 @@ export class MasterService {
   // 新しい支払い方法システム用メソッド
   static async initializePaymentMethods(userId: string): Promise<APIResponse<void>> {
     try {
-      // 現金支払い方法を作成
-      await prisma.paymentMethod.upsert({
+      // 現金支払い方法を作成（デフォルトの現金のみ）
+      const existingCash = await prisma.paymentMethod.findFirst({
         where: {
-          userId_name: {
+          userId,
+          type: 'CASH',
+          name: '現金',
+        },
+      });
+
+      if (!existingCash) {
+        await prisma.paymentMethod.create({
+          data: {
             userId,
             name: '現金',
-          },
-        },
-        update: {},
-        create: {
-          userId,
-          name: '現金',
-          type: 'CASH',
-          isActive: true,
-        },
-      });
-
-      // カードマスタから支払い方法を生成
-      const cards = await prisma.card.findMany({
-        where: { userId, isActive: true },
-      });
-
-      for (const card of cards) {
-        await prisma.paymentMethod.upsert({
-          where: {
-            userId_cardId: {
-              userId,
-              cardId: card.id,
-            },
-          },
-          update: {},
-          create: {
-            userId,
-            name: card.name,
-            type: 'CARD',
-            cardId: card.id,
+            type: 'CASH',
             isActive: true,
           },
         });
       }
 
-      // 銀行マスタから支払い方法を生成
-      const banks = await prisma.bank.findMany({
-        where: { userId, isActive: true },
-      });
-
-      for (const bank of banks) {
-        await prisma.paymentMethod.upsert({
-          where: {
-            userId_bankId: {
-              userId,
-              bankId: bank.id,
-            },
-          },
-          update: {},
-          create: {
-            userId,
-            name: bank.name,
-            type: 'BANK',
-            bankId: bank.id,
-            isActive: true,
-          },
-        });
-      }
+      // Note: カードや銀行の自動生成は削除
+      // ユーザーが必要に応じて手動で支払い方法を作成する
 
       return { success: true };
     } catch (error) {
