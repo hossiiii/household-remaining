@@ -22,6 +22,7 @@ export const transactionSchema = z.object({
     required_error: '種別を選択してください',
   }),
   amount: z.number().positive('金額は正の数で入力してください'),
+  cardWithdrawalDate: z.string().optional(),
 });
 
 export const transactionUpdateSchema = transactionSchema.partial();

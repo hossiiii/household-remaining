@@ -57,6 +57,7 @@ export interface TransactionFormData {
   purpose?: string;
   type: 'income' | 'expense';
   amount: number;
+  cardWithdrawalDate?: string;
 }
 
 export interface TransactionFilter {

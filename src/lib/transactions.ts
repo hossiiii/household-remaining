@@ -36,10 +36,16 @@ export class TransactionService {
         return { success: false, error: '指定された支払い方法が見つかりません' };
       }
 
-      // カード取引の場合、引き落とし予定日を計算
+      // カード取引の場合、引き落とし予定日を設定
       if (paymentMethod.type === 'CARD' && paymentMethod.card) {
-        const withdrawalDate = this.calculateWithdrawalDate(new Date(data.date), paymentMethod.card);
-        transactionData.cardWithdrawalDate = withdrawalDate;
+        if (data.cardWithdrawalDate) {
+          // フォームで指定された引き落とし日を使用
+          transactionData.cardWithdrawalDate = new Date(data.cardWithdrawalDate);
+        } else {
+          // 自動計算で引き落とし日を設定
+          const withdrawalDate = this.calculateWithdrawalDate(new Date(data.date), paymentMethod.card);
+          transactionData.cardWithdrawalDate = withdrawalDate;
+        }
       }
 
       const transaction = await prisma.transaction.create({
@@ -183,6 +189,9 @@ export class TransactionService {
       if (data.purpose !== undefined) updateData.purpose = data.purpose;
       if (data.type) updateData.type = data.type.toUpperCase();
       if (data.amount !== undefined) updateData.amount = data.amount;
+      if (data.cardWithdrawalDate !== undefined) {
+        updateData.cardWithdrawalDate = data.cardWithdrawalDate ? new Date(data.cardWithdrawalDate) : null;
+      }
 
       const transaction = await prisma.transaction.update({
         where: { 
