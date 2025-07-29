@@ -52,6 +52,31 @@ describe('/api/card-withdrawals', () => {
       expect(mockCardWithdrawalService.processCardWithdrawals).toHaveBeenCalledWith(mockUserId);
     });
 
+    it('should preserve manual date adjustments during processing', async () => {
+      mockAuth.mockResolvedValue(mockSession);
+      mockCardWithdrawalService.processCardWithdrawals.mockResolvedValue({
+        success: true,
+        data: {
+          processedWithdrawals: 1,
+          updatedWithdrawals: 2, // 2件は既存の引落し取引を更新（日付保持）
+          errors: []
+        }
+      });
+
+      const request = new NextRequest('http://localhost/api/card-withdrawals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.data.updatedWithdrawals).toBe(2);
+      expect(mockCardWithdrawalService.processCardWithdrawals).toHaveBeenCalledWith(mockUserId);
+    });
+
     it('should return 401 when user is not authenticated', async () => {
       mockAuth.mockResolvedValue(null);
 
