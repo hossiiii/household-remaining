@@ -79,6 +79,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               支払い方法
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              引落予定日
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               店舗
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
@@ -141,6 +144,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     </span>
                   )}
                 </div>
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                {transaction.paymentMethod.type === 'CARD' && transaction.cardWithdrawalDate ? (
+                  <span className="text-blue-600">
+                    {formatDate(new Date(transaction.cardWithdrawalDate))}
+                  </span>
+                ) : (
+                  '-'
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {transaction.store || '-'}
