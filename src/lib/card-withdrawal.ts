@@ -189,10 +189,10 @@ export class CardWithdrawalService {
       const transactionDate = new Date(transaction.date);
       const closingDate = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), card.closingDay);
       
-      // 締日を過ぎている場合は翌月の引き落とし
+      // 締日を過ぎている場合は翌月 + offsetの引き落とし
       let targetMonth: Date;
       if (transactionDate >= closingDate) {
-        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + card.withdrawalMonthOffset, 1);
+        targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + 1 + card.withdrawalMonthOffset, 1);
       } else {
         targetMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + card.withdrawalMonthOffset - 1, 1);
       }
@@ -217,8 +217,10 @@ export class CardWithdrawalService {
     
     let withdrawalDate: Date;
     if (date >= closingDate) {
-      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset, card.withdrawalDay);
+      // 締日以降の取引 → 翌月 + withdrawalMonthOffset分後に引き落とし
+      withdrawalDate = new Date(date.getFullYear(), date.getMonth() + 1 + card.withdrawalMonthOffset, card.withdrawalDay);
     } else {
+      // 締日前の取引 → withdrawalMonthOffset分後に引き落とし
       withdrawalDate = new Date(date.getFullYear(), date.getMonth() + card.withdrawalMonthOffset - 1, card.withdrawalDay);
     }
 
