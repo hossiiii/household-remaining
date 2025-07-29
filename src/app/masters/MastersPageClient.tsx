@@ -95,6 +95,7 @@ export const MastersPageClient: React.FC = () => {
       isActive: data.isActive ?? true,
       bankId: data.bankId || null,
       cardId: data.cardId || null,
+      memo: data.memo || null,
     };
     const result = await MasterService.createPaymentMethod(paymentMethodData);
     if (result.success) {
@@ -133,6 +134,7 @@ export const MastersPageClient: React.FC = () => {
       withdrawalMonthOffset: data.withdrawalMonthOffset,
       withdrawalBankId: data.withdrawalBankId,
       isActive: data.isActive ?? true,
+      memo: data.memo || null,
     };
     const result = await MasterService.createCard(cardData);
     if (result.success) {
@@ -174,6 +176,7 @@ export const MastersPageClient: React.FC = () => {
       branchName: data.branchName ?? null,
       accountNumber: data.accountNumber ?? null,
       isActive: data.isActive ?? true,
+      memo: data.memo || null,
     };
     const result = await MasterService.createBank(bankData);
     if (result.success) {
