@@ -27,6 +27,7 @@ export const CardForm: React.FC<CardFormProps> = ({
     withdrawalDay: initialData?.withdrawalDay || 1,
     withdrawalMonthOffset: initialData?.withdrawalMonthOffset || 1,
     withdrawalBankId: initialData?.withdrawalBankId || '',
+    memo: initialData?.memo || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
 
@@ -184,6 +185,22 @@ export const CardForm: React.FC<CardFormProps> = ({
           placeholder="銀行を選択"
           required
         />
+      </div>
+
+      {/* メモ欄 */}
+      <div>
+        <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-1">
+          メモ
+        </label>
+        <textarea
+          id="memo"
+          value={formData.memo || ''}
+          onChange={(e) => handleInputChange('memo', e.target.value)}
+          placeholder="カードに関するメモを入力（任意）"
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
+        />
+        <p className="mt-1 text-xs text-gray-500">例: メインカード、ネット決済用、ポイント高還元</p>
       </div>
 
       <div className="flex items-center">

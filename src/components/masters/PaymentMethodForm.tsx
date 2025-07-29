@@ -25,6 +25,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
     type: initialData?.type || 'CASH',
     cardId: initialData?.cardId || '',
     bankId: initialData?.bankId || '',
+    memo: initialData?.memo || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
 
@@ -95,6 +96,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
       submitData = {
         name: formData.name,
         type: 'CASH',
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     } else if (sourceType === 'card') {
@@ -102,6 +104,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
         name: formData.name,
         type: 'CARD',
         cardId: formData.cardId,
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     } else {
@@ -109,6 +112,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
         name: formData.name,
         type: 'BANK',
         bankId: formData.bankId,
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     }
@@ -130,6 +134,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
       type: newType === 'cash' ? 'CASH' : newType === 'card' ? 'CARD' : 'BANK',
       cardId: '',
       bankId: '',
+      memo: prev.memo, // メモは保持
     }));
     
     // エラーをクリア
@@ -292,6 +297,22 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
             : undefined
         }
       />
+
+      {/* メモ欄 */}
+      <div>
+        <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-1">
+          メモ
+        </label>
+        <textarea
+          id="memo"
+          value={formData.memo || ''}
+          onChange={(e) => handleInputChange('memo', e.target.value)}
+          placeholder="支払い方法に関するメモを入力（任意）"
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
+        />
+        <p className="mt-1 text-xs text-gray-500">例: メイン使用、生活費専用、緊急時のみ使用</p>
+      </div>
 
       {/* 有効フラグ */}
       <div className="flex items-center">
