@@ -53,6 +53,12 @@ export const CardTable: React.FC<CardTableProps> = ({
               種別
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              締日
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              引き落とし月
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               引き落とし日
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
@@ -74,6 +80,12 @@ export const CardTable: React.FC<CardTableProps> = ({
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {getTypeLabel(card.type)}
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                {card.closingDay}日
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                {card.withdrawalMonthOffset === 1 ? '翌月' : '翌々月'}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {card.withdrawalDay}日
