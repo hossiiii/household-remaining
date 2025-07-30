@@ -60,20 +60,35 @@ jobs:
           
           echo "Database schema sync complete."
 
-      - name: Run database seed (if needed)
+      - name: Run database seed
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          # 初回デプロイ時のみシーダーを実行
-          # ユーザーテーブルにデータがあるかチェック
-          USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" | grep -oE '[0-9]+' | head -1 || echo "0")
+          echo "Running database seed after reset..."
           
-          if [ "$USER_COUNT" = "0" ] && [ -f "prisma/seed.ts" ]; then
-            echo "Database is empty. Running seed..."
-            npm run db:seed
+          # Check if seed file exists
+          if [ -f "prisma/seed.ts" ]; then
+            echo "Seed file found. Executing seed..."
+            
+            # Check user count for verification
+            echo "Checking current user count..."
+            USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
+            echo "Current user count: $USER_COUNT"
+            
+            # Run seed regardless since we just reset the database
+            echo "Running seed..."
+            npm run db:seed || {
+              echo "Seed failed. Trying with tsx directly..."
+              npx tsx prisma/seed.ts || echo "Seed execution failed"
+            }
+            
+            # Verify seed results
+            FINAL_USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
+            echo "Final user count after seed: $FINAL_USER_COUNT"
+            
           else
-            echo "Database already has data or no seed file found. Skipping seed..."
+            echo "No seed file found at prisma/seed.ts"
           fi
         continue-on-error: true
 
