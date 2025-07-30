@@ -36,7 +36,6 @@ export const CardTable: React.FC<CardTableProps> = ({
   const getTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
       CREDIT_CARD: 'クレジットカード',
-      PREPAID_CARD: 'プリペイドカード',
     };
     return typeMap[type] || type;
   };

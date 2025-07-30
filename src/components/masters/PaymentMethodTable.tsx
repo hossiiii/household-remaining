@@ -46,7 +46,7 @@ export const PaymentMethodTable: React.FC<PaymentMethodTableProps> = ({
     if (paymentMethod.type === 'CASH') {
       return '現金支払い';
     } else if (paymentMethod.type === 'CARD' && paymentMethod.card) {
-      return `${paymentMethod.card.type === 'CREDIT_CARD' ? 'クレジット' : 'プリペイド'}カード`;
+      return 'クレジットカード';
     } else if (paymentMethod.type === 'BANK' && paymentMethod.bank) {
       return `銀行振込 (${paymentMethod.bank.branchName || '本店'})`;
     }

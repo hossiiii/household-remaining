@@ -78,7 +78,6 @@ async function main() {
     { name: 'メインクレジットカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 10, withdrawalMonthOffset: 1, withdrawalBankIndex: 0 },
     { name: '楽天カード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 27, withdrawalMonthOffset: 1, withdrawalBankIndex: 1 },
     { name: 'イオンカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 2, withdrawalMonthOffset: 1, withdrawalBankIndex: 2 },
-    { name: 'Amazonプリペイドカード', type: 'PREPAID_CARD', closingDay: 1, withdrawalDay: 1, withdrawalMonthOffset: 1, withdrawalBankIndex: 0 },
     { name: 'PayPayカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 25, withdrawalMonthOffset: 1, withdrawalBankIndex: 3 },
   ];
 
@@ -87,7 +86,7 @@ async function main() {
       data: {
         userId: user.id,
         name: card.name,
-        type: card.type as 'CREDIT_CARD' | 'PREPAID_CARD',
+        type: card.type as 'CREDIT_CARD',
         closingDay: card.closingDay,
         withdrawalDay: card.withdrawalDay,
         withdrawalMonthOffset: card.withdrawalMonthOffset,
@@ -242,7 +241,6 @@ async function main() {
 
   // カード返金データ（返金・キャンセル等）
   const cardRefundData = [
-    { date: new Date('2024-11-03'), amount: 2580, purpose: '商品返品', store: 'Amazon', paymentMethodIndex: 8 }, // Amazonプリペイドカード
     { date: new Date('2024-11-18'), amount: 1200, purpose: 'キャンセル返金', store: 'スタバ', paymentMethodIndex: 3 }, // メインクレジットカード（メイン）
     { date: new Date('2024-12-05'), amount: 5400, purpose: '過剰請求返金', store: 'イオン', paymentMethodIndex: 7 }, // イオンカード
     { date: new Date('2024-12-22'), amount: 890, purpose: 'ポイント還元', store: '楽天', paymentMethodIndex: 6 }, // 楽天カード（ネットショッピング）
@@ -292,7 +290,7 @@ async function main() {
           paymentMethodIndex = Math.random() < 0.4 ? 1 : Math.random() < 0.7 ? 3 : 9; // 小遣い用現金、メインクレジット（メイン）、PayPayカード
         } else if (purpose.includes('ネット購入')) {
           // ネット購入は専用カード
-          paymentMethodIndex = Math.random() < 0.6 ? 6 : 8; // 楽天カード（ネットショッピング）、Amazonプリペイド
+          paymentMethodIndex = 6; // 楽天カード（ネットショッピング）
         } else if (purpose.includes('電気代') || purpose.includes('ガス代') || purpose.includes('携帯代')) {
           // 固定費は固定費用カードまたは給与口座
           paymentMethodIndex = Math.random() < 0.6 ? 4 : 10; // メインクレジット（固定費）、みずほ銀行（給与口座）

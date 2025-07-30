@@ -206,7 +206,6 @@ enum PaymentMethodType {
 
 enum CardType {
   CREDIT_CARD
-  PREPAID_CARD
 }
 
 enum BalanceType {

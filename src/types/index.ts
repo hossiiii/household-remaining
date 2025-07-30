@@ -126,7 +126,7 @@ export interface PaymentMethodFormData {
 
 export interface CardFormData {
   name: string;
-  type: 'CREDIT_CARD' | 'PREPAID_CARD';
+  type: 'CREDIT_CARD';
   closingDay: number;
   withdrawalDay: number;
   withdrawalMonthOffset: number;
