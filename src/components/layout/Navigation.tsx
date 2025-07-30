@@ -20,6 +20,7 @@ export const Navigation: React.FC = () => {
     { href: '/transactions', label: '取引管理' },
     { href: '/masters', label: 'マスタ管理' },
     { href: '/import-export', label: 'CSV出入力' },
+    { href: '/bank-withdrawal-schedule', label: '引落し予定' },
   ];
 
   const isActiveLink = (href: string) => {
