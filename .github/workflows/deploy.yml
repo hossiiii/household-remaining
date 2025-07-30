@@ -37,19 +37,28 @@ jobs:
           echo "Testing direct database connection..."
           npx prisma db execute --url "$DIRECT_URL" --stdin <<< "SELECT 1" || echo "Direct connection failed"
           
-      - name: Force database reset and migration
+      - name: Force database schema sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Force resetting database and applying all migrations..."
-          echo "⚠️  WARNING: This will delete all existing data!"
+          echo "Force syncing database schema..."
+          echo "⚠️  WARNING: This will delete all existing data and reset the database!"
           
-          # Reset database and apply all migrations from scratch
-          echo "Resetting database..."
-          npx prisma migrate reset --force --skip-seed
+          # Drop all tables and recreate from schema
+          echo "Dropping all existing tables..."
+          npx prisma db execute --url "$DATABASE_URL" --stdin <<< "
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+            GRANT ALL ON SCHEMA public TO postgres;
+            GRANT ALL ON SCHEMA public TO public;
+          " || echo "Schema drop failed, continuing..."
           
-          echo "Database reset complete. All migrations have been applied fresh."
+          # Push current schema to database (creates all tables fresh)
+          echo "Pushing schema to database..."
+          npx prisma db push --accept-data-loss --force-reset
+          
+          echo "Database schema sync complete."
 
       - name: Run database seed (if needed)
         env:
