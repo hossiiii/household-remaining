@@ -18,6 +18,7 @@ export const Navigation: React.FC = () => {
   const navigationItems = [
     { href: '/dashboard', label: 'ダッシュボード' },
     { href: '/transactions', label: '取引管理' },
+    { href: '/bank-withdrawal-schedule', label: '引落し予定' },
     { href: '/masters', label: 'マスタ管理' },
     { href: '/import-export', label: 'CSV出入力' },
   ];
