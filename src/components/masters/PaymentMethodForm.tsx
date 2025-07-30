@@ -25,6 +25,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
     type: initialData?.type || 'CASH',
     cardId: initialData?.cardId || '',
     bankId: initialData?.bankId || '',
+    memo: initialData?.memo || '',
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   });
 
@@ -95,6 +96,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
       submitData = {
         name: formData.name,
         type: 'CASH',
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     } else if (sourceType === 'card') {
@@ -102,6 +104,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
         name: formData.name,
         type: 'CARD',
         cardId: formData.cardId,
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     } else {
@@ -109,6 +112,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
         name: formData.name,
         type: 'BANK',
         bankId: formData.bankId,
+        memo: formData.memo,
         isActive: formData.isActive,
       };
     }
@@ -292,6 +296,21 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
             : undefined
         }
       />
+
+      {/* メモ */}
+      <div>
+        <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-1">
+          メモ（任意）
+        </label>
+        <textarea
+          id="memo"
+          value={formData.memo || ''}
+          onChange={(e) => handleInputChange('memo', e.target.value)}
+          placeholder="例: 個人用の支払い方法"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          rows={3}
+        />
+      </div>
 
       {/* 有効フラグ */}
       <div className="flex items-center">

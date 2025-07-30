@@ -47,6 +47,9 @@ export const BankTable: React.FC<BankTableProps> = ({
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               口座番号
             </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+              メモ
+            </th>
             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
               状態
             </th>
@@ -66,6 +69,9 @@ export const BankTable: React.FC<BankTableProps> = ({
               </td>
               <td className="px-4 py-3 text-sm text-gray-900 border-b">
                 {bank.accountNumber ?? '-'}
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                {bank.memo || '-'}
               </td>
               <td className="px-4 py-3 text-sm text-center border-b">
                 <span

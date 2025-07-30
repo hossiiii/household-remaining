@@ -35,6 +35,7 @@ const paymentMethodBaseSchema = z.object({
   }),
   cardId: z.string().optional(),
   bankId: z.string().optional(),
+  memo: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -66,6 +67,7 @@ export const cardSchema = z.object({
     required_error: '引き落とし月を選択してください',
   }),
   withdrawalBankId: z.string().min(1, '引き落とし銀行を選択してください'),
+  memo: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -76,6 +78,7 @@ export const bankSchema = z.object({
   name: z.string().min(1, '銀行名を入力してください'),
   accountNumber: z.string().optional(),
   branchName: z.string().optional(),
+  memo: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 

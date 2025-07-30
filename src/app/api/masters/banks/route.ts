@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       name: validatedData.name,
       accountNumber: validatedData.accountNumber ?? null,
       branchName: validatedData.branchName ?? null,
+      memo: validatedData.memo ?? null,
       isActive: validatedData.isActive,
     };
 

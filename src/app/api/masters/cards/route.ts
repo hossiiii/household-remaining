@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       withdrawalDay: validatedData.withdrawalDay,
       withdrawalMonthOffset: validatedData.withdrawalMonthOffset,
       withdrawalBankId: validatedData.withdrawalBankId,
+      memo: validatedData.memo || null,
       isActive: validatedData.isActive ?? true,
     };
 
