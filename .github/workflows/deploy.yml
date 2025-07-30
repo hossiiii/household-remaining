@@ -55,7 +55,22 @@ jobs:
             echo "Migration failed. Attempting to resolve failed migrations..."
             
             # Get list of failed migrations
-            FAILED_MIGRATIONS=$(npx prisma migrate status 2>&1 | grep -E "following migration.*failed" -A 10 | grep -E "^[0-9]{14}_" | awk '{print $1}' || echo "")
+            MIGRATION_OUTPUT=$(npx prisma migrate status 2>&1)
+            echo "Migration status output:"
+            echo "$MIGRATION_OUTPUT"
+            
+            # Extract failed migration names - they appear after "Following migration have failed:"
+            FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | sed -n '/Following migration have failed:/,/^$/p' | grep -E "^[0-9]{14}_" || echo "")
+            
+            # Alternative extraction method if first one fails
+            if [ -z "$FAILED_MIGRATIONS" ]; then
+              FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | grep -A 20 "have failed:" | grep -E "^[0-9]{14}_" || echo "")
+            fi
+            
+            # If still empty, try to extract from error messages
+            if [ -z "$FAILED_MIGRATIONS" ]; then
+              FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | grep -o '[0-9]\{14\}_[a-zA-Z_]*' | head -1 || echo "")
+            fi
             
             if [ -n "$FAILED_MIGRATIONS" ]; then
               echo "Found failed migrations: $FAILED_MIGRATIONS"
