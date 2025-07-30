@@ -64,7 +64,7 @@ export const DashboardPageClient: React.FC = () => {
       }
 
       // 最近の取引の取得
-      const recentResult = await TransactionService.getTransactions({}, { page: 1, limit: 5 });
+      const recentResult = await TransactionService.getTransactions({}, { page: 1, limit: 5, sortBy: 'date', sortOrder: 'desc' });
       if (recentResult.success && recentResult.data) {
         setRecentTransactions(recentResult.data.data);
       }
