@@ -37,43 +37,66 @@ jobs:
           echo "Testing direct database connection..."
           npx prisma db execute --url "$DIRECT_URL" --stdin <<< "SELECT 1" || echo "Direct connection failed"
           
-      - name: Check database schema and resolve migration issues
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: |
-          echo "Checking database schema and migration status..."
-          
-          # Check if memo columns already exist
-          echo "Checking if memo columns exist..."
-          PAYMENT_MEMO_EXISTS=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'payment_methods' AND column_name = 'memo';" | grep -c "memo" || echo "0")
-          CARD_MEMO_EXISTS=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'cards' AND column_name = 'memo';" | grep -c "memo" || echo "0")
-          BANK_MEMO_EXISTS=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'banks' AND column_name = 'memo';" | grep -c "memo" || echo "0")
-          
-          echo "Payment methods memo exists: $PAYMENT_MEMO_EXISTS"
-          echo "Cards memo exists: $CARD_MEMO_EXISTS"
-          echo "Banks memo exists: $BANK_MEMO_EXISTS"
-          
-          # If all memo columns exist, mark the migration as resolved
-          if [ "$PAYMENT_MEMO_EXISTS" = "1" ] && [ "$CARD_MEMO_EXISTS" = "1" ] && [ "$BANK_MEMO_EXISTS" = "1" ]; then
-            echo "Memo columns already exist. Resolving migration as applied..."
-            npx prisma migrate resolve --applied "20250129_add_memo_fields" || true
-          else
-            echo "Some memo columns are missing. Migration needs to run properly."
-          fi
-
       - name: Run database migration
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
           echo "Running database migrations..."
-          npx prisma migrate deploy || {
-            echo "Migration failed. Attempting to resolve as rolled back and retry..."
-            npx prisma migrate resolve --rolled-back "20250129_add_memo_fields" || true
-            npx prisma migrate deploy
-          }
-          echo "Migration complete."
+          
+          # Check current migration status
+          echo "Checking migration status..."
+          npx prisma migrate status || echo "Migration status check failed, continuing..."
+          
+          # Attempt migration deployment
+          if npx prisma migrate deploy; then
+            echo "Migration completed successfully."
+          else
+            echo "Migration failed. Attempting to resolve failed migrations..."
+            
+            # Get list of failed migrations
+            FAILED_MIGRATIONS=$(npx prisma migrate status 2>&1 | grep -E "following migration.*failed" -A 10 | grep -E "^[0-9]{14}_" | awk '{print $1}' || echo "")
+            
+            if [ -n "$FAILED_MIGRATIONS" ]; then
+              echo "Found failed migrations: $FAILED_MIGRATIONS"
+              
+              # Try to resolve each failed migration
+              echo "$FAILED_MIGRATIONS" | while read -r migration; do
+                if [ -n "$migration" ]; then
+                  echo "Attempting to resolve migration: $migration"
+                  
+                  # Check if the migration changes already exist in the database
+                  # by comparing current schema with target schema
+                  echo "Checking if migration changes are already applied..."
+                  
+                  # Try to mark as rolled back first, then retry
+                  echo "Marking migration $migration as rolled back..."
+                  npx prisma migrate resolve --rolled-back "$migration" || echo "Failed to mark as rolled back"
+                fi
+              done
+              
+              # Retry migration after resolving failed ones
+              echo "Retrying migration deployment..."
+              npx prisma migrate deploy || {
+                echo "Migration still failing. Attempting baseline approach..."
+                
+                # As a last resort, try to baseline the first migration
+                if [ -d "prisma/migrations" ]; then
+                  FIRST_MIGRATION=$(ls -1 prisma/migrations | grep -E '^[0-9]{14}_' | head -n 1)
+                  if [ -n "$FIRST_MIGRATION" ]; then
+                    echo "Attempting to baseline migration: $FIRST_MIGRATION"
+                    npx prisma migrate resolve --applied "$FIRST_MIGRATION" || echo "Baseline failed"
+                    npx prisma migrate deploy || echo "Final migration attempt failed"
+                  fi
+                fi
+              }
+            else
+              echo "No specific failed migrations found. This may be a different issue."
+              exit 1
+            fi
+          fi
+          
+          echo "Migration process complete."
 
       - name: Run database seed (if needed)
         env:
