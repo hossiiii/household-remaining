@@ -37,81 +37,19 @@ jobs:
           echo "Testing direct database connection..."
           npx prisma db execute --url "$DIRECT_URL" --stdin <<< "SELECT 1" || echo "Direct connection failed"
           
-      - name: Run database migration
+      - name: Force database reset and migration
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Running database migrations..."
+          echo "Force resetting database and applying all migrations..."
+          echo "⚠️  WARNING: This will delete all existing data!"
           
-          # Check current migration status
-          echo "Checking migration status..."
-          npx prisma migrate status || echo "Migration status check failed, continuing..."
+          # Reset database and apply all migrations from scratch
+          echo "Resetting database..."
+          npx prisma migrate reset --force --skip-seed
           
-          # Attempt migration deployment
-          if npx prisma migrate deploy; then
-            echo "Migration completed successfully."
-          else
-            echo "Migration failed. Attempting to resolve failed migrations..."
-            
-            # Get list of failed migrations
-            MIGRATION_OUTPUT=$(npx prisma migrate status 2>&1)
-            echo "Migration status output:"
-            echo "$MIGRATION_OUTPUT"
-            
-            # Extract failed migration names - they appear after "Following migration have failed:"
-            FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | sed -n '/Following migration have failed:/,/^$/p' | grep -E "^[0-9]{14}_" || echo "")
-            
-            # Alternative extraction method if first one fails
-            if [ -z "$FAILED_MIGRATIONS" ]; then
-              FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | grep -A 20 "have failed:" | grep -E "^[0-9]{14}_" || echo "")
-            fi
-            
-            # If still empty, try to extract from error messages
-            if [ -z "$FAILED_MIGRATIONS" ]; then
-              FAILED_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | grep -o '[0-9]\{14\}_[a-zA-Z_]*' | head -1 || echo "")
-            fi
-            
-            if [ -n "$FAILED_MIGRATIONS" ]; then
-              echo "Found failed migrations: $FAILED_MIGRATIONS"
-              
-              # Try to resolve each failed migration
-              echo "$FAILED_MIGRATIONS" | while read -r migration; do
-                if [ -n "$migration" ]; then
-                  echo "Attempting to resolve migration: $migration"
-                  
-                  # Check if the migration changes already exist in the database
-                  # by comparing current schema with target schema
-                  echo "Checking if migration changes are already applied..."
-                  
-                  # Try to mark as rolled back first, then retry
-                  echo "Marking migration $migration as rolled back..."
-                  npx prisma migrate resolve --rolled-back "$migration" || echo "Failed to mark as rolled back"
-                fi
-              done
-              
-              # Retry migration after resolving failed ones
-              echo "Retrying migration deployment..."
-              npx prisma migrate deploy || {
-                echo "Migration still failing. Attempting baseline approach..."
-                
-                # As a last resort, try to baseline the first migration
-                if [ -d "prisma/migrations" ]; then
-                  FIRST_MIGRATION=$(ls -1 prisma/migrations | grep -E '^[0-9]{14}_' | head -n 1)
-                  if [ -n "$FIRST_MIGRATION" ]; then
-                    echo "Attempting to baseline migration: $FIRST_MIGRATION"
-                    npx prisma migrate resolve --applied "$FIRST_MIGRATION" || echo "Baseline failed"
-                    npx prisma migrate deploy || echo "Final migration attempt failed"
-                  fi
-                fi
-              }
-            else
-              echo "No specific failed migrations found. This may be a different issue."
-              exit 1
-            fi
-          fi
-          
-          echo "Migration process complete."
+          echo "Database reset complete. All migrations have been applied fresh."
 
       - name: Run database seed (if needed)
         env:
