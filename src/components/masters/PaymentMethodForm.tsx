@@ -176,7 +176,7 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 
   const cardOptions = cards.map(card => ({
     value: card.id,
-    label: `${card.name} (${card.type === 'CREDIT_CARD' ? 'クレジット' : 'プリペイド'})`,
+    label: `${card.name} (クレジット)`,
   }));
 
   const bankOptions = banks.map(bank => ({

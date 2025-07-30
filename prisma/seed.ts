@@ -78,7 +78,6 @@ async function main() {
     { name: 'メインクレジットカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 10, withdrawalMonthOffset: 1, withdrawalBankIndex: 0 },
     { name: '楽天カード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 27, withdrawalMonthOffset: 1, withdrawalBankIndex: 1 },
     { name: 'イオンカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 2, withdrawalMonthOffset: 1, withdrawalBankIndex: 2 },
-    { name: 'Amazonプリペイドカード', type: 'PREPAID_CARD', closingDay: 1, withdrawalDay: 1, withdrawalMonthOffset: 1, withdrawalBankIndex: 0 },
     { name: 'PayPayカード', type: 'CREDIT_CARD', closingDay: 1, withdrawalDay: 25, withdrawalMonthOffset: 1, withdrawalBankIndex: 3 },
   ];
 
@@ -87,7 +86,7 @@ async function main() {
       data: {
         userId: user.id,
         name: card.name,
-        type: card.type as 'CREDIT_CARD' | 'PREPAID_CARD',
+        type: card.type as 'CREDIT_CARD',
         closingDay: card.closingDay,
         withdrawalDay: card.withdrawalDay,
         withdrawalMonthOffset: card.withdrawalMonthOffset,
@@ -215,12 +214,12 @@ async function main() {
 
   // 各銀行の初期残高を設定（マイナスを避けるため十分な金額）
   const initialBalances = [
-    { date: new Date('2024-09-30'), amount: 200000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 10 }, // みずほ銀行（給与口座）
-    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 12 }, // 三菱UFJ銀行
-    { date: new Date('2024-09-30'), amount: 100000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 13 }, // 三井住友銀行
-    { date: new Date('2024-09-30'), amount: 80000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 14 }, // ゆうちょ銀行（生活費）
-    { date: new Date('2024-09-30'), amount: 300000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 11 }, // みずほ銀行（貯金用）
-    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 15 }, // ゆうちょ銀行（積立）
+    { date: new Date('2024-09-30'), amount: 200000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 9 }, // みずほ銀行（給与口座）
+    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 11 }, // 三菱UFJ銀行
+    { date: new Date('2024-09-30'), amount: 100000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 12 }, // 三井住友銀行
+    { date: new Date('2024-09-30'), amount: 80000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 13 }, // ゆうちょ銀行（生活費）
+    { date: new Date('2024-09-30'), amount: 300000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 10 }, // みずほ銀行（貯金用）
+    { date: new Date('2024-09-30'), amount: 150000, purpose: 'この時点の残高', store: null, paymentMethodIndex: 14 }, // ゆうちょ銀行（積立）
   ];
 
   // 現金の初期残高
@@ -232,17 +231,17 @@ async function main() {
 
   // 収入データ（銀行口座への入金のみ - 給与は必ず銀行振込）
   const incomeData = [
-    { date: new Date('2024-10-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 }, // みずほ銀行（給与口座）
-    { date: new Date('2024-11-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 },
-    { date: new Date('2024-12-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 10 },
-    { date: new Date('2024-11-15'), amount: 50000, purpose: '副業収入', store: null, paymentMethodIndex: 12 }, // 三菱UFJ銀行
-    { date: new Date('2024-12-15'), amount: 75000, purpose: '副業収入', store: null, paymentMethodIndex: 12 },
-    { date: new Date('2024-12-31'), amount: 100000, purpose: 'ボーナス', store: null, paymentMethodIndex: 13 }, // 三井住友銀行
+    { date: new Date('2024-10-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 9 }, // みずほ銀行（給与口座）
+    { date: new Date('2024-11-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 9 },
+    { date: new Date('2024-12-25'), amount: 350000, purpose: '給与', store: null, paymentMethodIndex: 9 },
+    { date: new Date('2024-11-15'), amount: 50000, purpose: '副業収入', store: null, paymentMethodIndex: 11 }, // 三菱UFJ銀行
+    { date: new Date('2024-12-15'), amount: 75000, purpose: '副業収入', store: null, paymentMethodIndex: 11 },
+    { date: new Date('2024-12-31'), amount: 100000, purpose: 'ボーナス', store: null, paymentMethodIndex: 12 }, // 三井住友銀行
   ];
 
   // カード返金データ（返金・キャンセル等）
   const cardRefundData = [
-    { date: new Date('2024-11-03'), amount: 2580, purpose: '商品返品', store: 'Amazon', paymentMethodIndex: 8 }, // Amazonプリペイドカード
+    { date: new Date('2024-11-03'), amount: 2580, purpose: '商品返品', store: 'Amazon', paymentMethodIndex: 6 }, // 楽天カード（ネットショッピング）
     { date: new Date('2024-11-18'), amount: 1200, purpose: 'キャンセル返金', store: 'スタバ', paymentMethodIndex: 3 }, // メインクレジットカード（メイン）
     { date: new Date('2024-12-05'), amount: 5400, purpose: '過剰請求返金', store: 'イオン', paymentMethodIndex: 7 }, // イオンカード
     { date: new Date('2024-12-22'), amount: 890, purpose: 'ポイント還元', store: '楽天', paymentMethodIndex: 6 }, // 楽天カード（ネットショッピング）
@@ -286,23 +285,23 @@ async function main() {
         
         if (purpose.includes('食材') || purpose.includes('日用品')) {
           // 食材・日用品は生活用現金または生活費用カード
-          paymentMethodIndex = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 5 : 14; // 生活用現金、楽天カード（生活費用）、ゆうちょ銀行（生活費）
+          paymentMethodIndex = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 5 : 13; // 生活用現金、楽天カード（生活費用）、ゆうちょ銀行（生活費）
         } else if (purpose.includes('外食') || purpose.includes('飲食')) {
           // 外食は小遣い用現金または個人用カード
-          paymentMethodIndex = Math.random() < 0.4 ? 1 : Math.random() < 0.7 ? 3 : 9; // 小遣い用現金、メインクレジット（メイン）、PayPayカード
+          paymentMethodIndex = Math.random() < 0.4 ? 1 : Math.random() < 0.7 ? 3 : 8; // 小遣い用現金、メインクレジット（メイン）、PayPayカード
         } else if (purpose.includes('ネット購入')) {
           // ネット購入は専用カード
-          paymentMethodIndex = Math.random() < 0.6 ? 6 : 8; // 楽天カード（ネットショッピング）、Amazonプリペイド
+          paymentMethodIndex = Math.random() < 0.7 ? 6 : 8; // 楽天カード（ネットショッピング）、PayPayカード
         } else if (purpose.includes('電気代') || purpose.includes('ガス代') || purpose.includes('携帯代')) {
           // 固定費は固定費用カードまたは給与口座
-          paymentMethodIndex = Math.random() < 0.6 ? 4 : 10; // メインクレジット（固定費）、みずほ銀行（給与口座）
+          paymentMethodIndex = Math.random() < 0.6 ? 4 : 9; // メインクレジット（固定費）、みずほ銀行（給与口座）
         } else if (amount >= 10000) {
           // 高額はカードまたは銀行
-          const highAmountOptions = [3, 4, 5, 6, 10, 12, 13]; // 各種カード・銀行
+          const highAmountOptions = [3, 4, 5, 6, 7, 8, 9, 11, 12]; // 各種カード・銀行（インデックス調整）
           paymentMethodIndex = highAmountOptions[Math.floor(Math.random() * highAmountOptions.length)];
         } else {
           // その他は全体からランダム（緊急用現金と貯金用口座を除く）
-          const generalOptions = [0, 1, 3, 5, 7, 9, 12, 14]; // 緊急用と貯金用を除く
+          const generalOptions = [0, 1, 3, 5, 7, 8, 9, 11, 13]; // 緊急用と貯金用を除く（インデックス調整）
           paymentMethodIndex = generalOptions[Math.floor(Math.random() * generalOptions.length)];
         }
 

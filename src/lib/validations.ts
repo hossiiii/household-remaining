@@ -58,7 +58,7 @@ export const paymentMethodUpdateSchema = paymentMethodBaseSchema.partial();
 // Card validation schemas
 export const cardSchema = z.object({
   name: z.string().min(1, 'カード名を入力してください'),
-  type: z.enum(['CREDIT_CARD', 'PREPAID_CARD'], {
+  type: z.enum(['CREDIT_CARD'], {
     required_error: 'カード種別を選択してください',
   }),
   closingDay: z.number().min(1).max(31),

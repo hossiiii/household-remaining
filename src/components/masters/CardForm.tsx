@@ -111,7 +111,6 @@ export const CardForm: React.FC<CardFormProps> = ({
 
   const typeOptions = [
     { value: 'CREDIT_CARD', label: 'クレジットカード' },
-    { value: 'PREPAID_CARD', label: 'プリペイドカード' },
   ];
 
   return (
