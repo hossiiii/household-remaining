@@ -37,55 +37,48 @@ jobs:
           echo "Testing direct database connection..."
           npx prisma db execute --url "$DIRECT_URL" --stdin <<< "SELECT 1" || echo "Direct connection failed"
           
-      - name: Force database schema sync
+      - name: Run database migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Force syncing database schema..."
-          echo "⚠️  WARNING: This will delete all existing data and reset the database!"
+          echo "Running database migrations..."
           
-          # Drop all tables and recreate from schema
-          echo "Dropping all existing tables..."
-          npx prisma db execute --url "$DATABASE_URL" --stdin <<< "
-            DROP SCHEMA public CASCADE;
-            CREATE SCHEMA public;
-            GRANT ALL ON SCHEMA public TO postgres;
-            GRANT ALL ON SCHEMA public TO public;
-          " || echo "Schema drop failed, continuing..."
+          # Deploy migrations safely without data loss
+          npx prisma migrate deploy
           
-          # Push current schema to database (creates all tables fresh)
-          echo "Pushing schema to database..."
-          npx prisma db push --accept-data-loss --force-reset
-          
-          echo "Database schema sync complete."
+          echo "Database migrations complete."
 
-      - name: Run database seed
+      - name: Run database seed (only if needed)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Running database seed after reset..."
+          echo "Checking if database seed is needed..."
           
           # Check if seed file exists
           if [ -f "prisma/seed.ts" ]; then
-            echo "Seed file found. Executing seed..."
+            echo "Seed file found."
             
-            # Check user count for verification
+            # Check if database is empty (no users)
             echo "Checking current user count..."
             USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
             echo "Current user count: $USER_COUNT"
             
-            # Run seed regardless since we just reset the database
-            echo "Running seed..."
-            npm run db:seed || {
-              echo "Seed failed. Trying with tsx directly..."
-              npx tsx prisma/seed.ts || echo "Seed execution failed"
-            }
-            
-            # Verify seed results
-            FINAL_USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
-            echo "Final user count after seed: $FINAL_USER_COUNT"
+            # Only run seed if database is empty
+            if [ "$USER_COUNT" -eq "0" ]; then
+              echo "Database is empty. Running seed..."
+              npm run db:seed || {
+                echo "Seed failed. Trying with tsx directly..."
+                npx tsx prisma/seed.ts || echo "Seed execution failed"
+              }
+              
+              # Verify seed results
+              FINAL_USER_COUNT=$(npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
+              echo "Final user count after seed: $FINAL_USER_COUNT"
+            else
+              echo "Database already has data. Skipping seed."
+            fi
             
           else
             echo "No seed file found at prisma/seed.ts"
