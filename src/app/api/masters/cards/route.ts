@@ -31,7 +31,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = cardSchema.parse(body);
+    
+    // nullをundefinedに変換（Zodバリデーション用）
+    const preprocessedData = {
+      ...body,
+      memo: body.memo === null ? undefined : body.memo,
+    };
+    
+    const validatedData = cardSchema.parse(preprocessedData);
 
     // undefinedをnullに変換してPrismaスキーマとの互換性を保つ
     const data = {
