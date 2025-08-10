@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       ...body,
       cardId: body.cardId === null ? undefined : body.cardId,
       bankId: body.bankId === null ? undefined : body.bankId,
+      memo: body.memo === null ? undefined : body.memo,
     };
     
     const validatedData = paymentMethodSchema.parse(preprocessedData);
