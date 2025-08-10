@@ -31,7 +31,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = bankSchema.parse(body);
+    
+    // nullをundefinedに変換（Zodバリデーション用）
+    const preprocessedData = {
+      ...body,
+      accountNumber: body.accountNumber === null ? undefined : body.accountNumber,
+      branchName: body.branchName === null ? undefined : body.branchName,
+      memo: body.memo === null ? undefined : body.memo,
+    };
+    
+    const validatedData = bankSchema.parse(preprocessedData);
     
     // undefinedをnullに変換
     const bankData = {
